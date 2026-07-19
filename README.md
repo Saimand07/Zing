@@ -69,6 +69,25 @@ By utilizing Stellar's near-zero fee, high-throughput ledger and Soroban's rust-
 | **Trading Competitions** | `CAHXXMYINOBWAAYBHETS6C5NKX4S4F4OHWV7EFLX6PY7QB3RCSQMQO2T` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAHXXMYINOBWAAYBHETS6C5NKX4S4F4OHWV7EFLX6PY7QB3RCSQMQO2T) |
 | **Prediction Markets** | `CBY4WYAVM5ZGQYMJDMSJBRZDBWOELJAFM25IWCM2QJL6N6TYRI7W3N3I` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBY4WYAVM5ZGQYMJDMSJBRZDBWOELJAFM25IWCM2QJL6N6TYRI7W3N3I) |
 
+### Inter-contract call proof
+- **Tx Hash:** `06a90c1c90f40cd7510921379480f4ebff3f47ed638ddecf997293f113fbd09f`
+- **Explorer:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/06a90c1c90f40cd7510921379480f4ebff3f47ed638ddecf997293f113fbd09f)
+- **Status:** Successful
+- **Processed:** 2026-07-19 21:05:12 UTC
+- **Ledger:** 3695548
+- **Source Account:** `GAVUUT...NTSG4Q`
+- **Sequence Number:** 15872236325961729
+- **Transaction size:** 316 bytes
+- **Max Fee:** 0.0002 XLM
+- **Fee Charged:** 0.00002 XLM
+- **Operations:**
+  - `GAVU...SG4Q` sent 344 `KLOGAVU...SG4Q` to `GABJ...7LUX`
+  - `GAVU...SG4Q` updated account options. Set thresholds low=0, medium=0, high=0. Set master key weight to 0.
+
+### CI/CD Pipeline
+The project utilizes automated CI/CD via GitHub Actions for seamless contract compilation, linting, and testing.
+![CI/CD Pipeline](public/Screenshot/CICD.png)
+
 ---
 
 ## 📸 Platform Preview
