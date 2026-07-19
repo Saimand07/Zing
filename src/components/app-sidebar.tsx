@@ -11,7 +11,8 @@ import {
   Users, 
   Wallet,
   Settings,
-  Trophy
+  Trophy,
+  Code
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -88,6 +89,9 @@ export default function AppSidebar() {
         <div style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", padding: "24px 12px 4px 12px", letterSpacing: "0.05em" }}>Community</div>
         <NavItem href="/social-booster" icon={Users} label="Social Booster" />
         <NavItem href="/competitions" icon={Trophy} label="Competitions" />
+
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", padding: "24px 12px 4px 12px", letterSpacing: "0.05em" }}>Developers</div>
+        <NavItem href="/contracts" icon={Code} label="Smart Contracts" />
       </div>
 
       <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "4px" }}>

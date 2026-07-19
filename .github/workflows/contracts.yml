@@ -1,0 +1,36 @@
+name: Contracts CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'contracts/**'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'contracts/**'
+
+defaults:
+  run:
+    working-directory: contracts
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        target: wasm32-unknown-unknown
+        
+    - name: Check Formatting
+      run: cargo fmt -- --check
+      
+    - name: Clippy Lints
+      run: cargo clippy --all-targets --all-features -- -D warnings
+      
+    - name: Build Contracts (WASM)
+      run: cargo build --target wasm32-unknown-unknown --release

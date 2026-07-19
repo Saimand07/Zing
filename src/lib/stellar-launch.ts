@@ -126,3 +126,56 @@ export async function buildSorobanLaunchTx(
   const preparedTx = await sorobanServer.prepareTransaction(tx);
   return preparedTx.toXDR();
 }
+
+/**
+ * Fetches the native XLM balance of a contract account.
+ */
+export async function fetchContractBalance(contractId: string) {
+  try {
+    const account = await server.loadAccount(contractId);
+    const nativeBal = account.balances.find((b: any) => b.asset_type === "native");
+    return nativeBal ? nativeBal.balance : "0";
+  } catch (e: any) {
+    if (e?.response?.status === 404) return "0";
+    console.error("fetchContractBalance error:", e);
+    return "Error";
+  }
+}
+
+/**
+ * Builds a generic Soroban transaction.
+ */
+export async function buildGenericContractCall(
+  userPubKey: string,
+  contractId: string,
+  methodName: string,
+  argsStr: string
+) {
+  const account = await server.loadAccount(userPubKey);
+  const contract = new StellarSdk.Contract(contractId);
+  
+  // Basic parsing for args (supports string, number, and boolean). 
+  // Expecting a comma-separated list like: "Hello", 123, true
+  const rawArgs = argsStr ? argsStr.split(",").map(s => s.trim()) : [];
+  const scVals = rawArgs.map(arg => {
+    if (arg === "true") return StellarSdk.xdr.ScVal.scvBool(true);
+    if (arg === "false") return StellarSdk.xdr.ScVal.scvBool(false);
+    if (!isNaN(Number(arg)) && arg !== "") {
+      return StellarSdk.nativeToScVal(Number(arg), { type: "i32" });
+    }
+    // Remove quotes if present
+    const cleanStr = arg.replace(/^["'](.*)["']$/, '$1');
+    return StellarSdk.xdr.ScVal.scvString(cleanStr);
+  });
+
+  const tx = new TransactionBuilder(account, {
+    fee: "100000",
+    networkPassphrase: Networks.TESTNET
+  })
+    .addOperation(contract.call(methodName, ...scVals))
+    .setTimeout(60)
+    .build();
+
+  const preparedTx = await sorobanServer.prepareTransaction(tx);
+  return preparedTx.toXDR();
+}
