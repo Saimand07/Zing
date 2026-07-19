@@ -58,11 +58,11 @@ By utilizing Stellar's near-zero fee, high-throughput ledger and Soroban's rust-
 
 | Contract Module | Contract ID | Explorer Link |
 | --- | --- | --- |
-| **Smart Wallet & Routing** | `CBJQ5ABTAU37OHQGD4HHLNYECUTVPJXS4BUFNWBLM7IVHBH6EIQMSJJ2` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBJQ5ABTAU37OHQGD4HHLNYECUTVPJXS4BUFNWBLM7IVHBH6EIQMSJJ2) |
-| **Zing Launchpad** | `CAQFOWQLHE3BBOAGMJZNPCIASUOSJJCUQLJE6V6VSMW7H7ST4OOHD77C` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAQFOWQLHE3BBOAGMJZNPCIASUOSJJCUQLJE6V6VSMW7H7ST4OOHD77C) |
-| **Social Booster (Campaigns)** | `CAKXHCLWKWLETL532QDVC7XHCMUSMMFJCA34IT5SJT2LDTKUMOH6WBRW` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAKXHCLWKWLETL532QDVC7XHCMUSMMFJCA34IT5SJT2LDTKUMOH6WBRW) |
-| **Trading Competitions** | `CC7Z3ALJMFFI3ICBTLJQGZQTA3XPIWCEOSBO3TMQQD52A3FQFM6VLVYS` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CC7Z3ALJMFFI3ICBTLJQGZQTA3XPIWCEOSBO3TMQQD52A3FQFM6VLVYS) |
-| **Prediction Markets** | `CDAA5ABTAU37OHQGD4HHLNYECUTVPJXS4BUFNWBLM7IVHBH6EIQMSJJ2` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDAA5ABTAU37OHQGD4HHLNYECUTVPJXS4BUFNWBLM7IVHBH6EIQMSJJ2) |
+| **Smart Wallet & Routing** | `CAMVCRCMROO524FBV6IJYPB6BIOR2OR7DVCRMLQJ5QZB2JDOP6GMIO2X` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAMVCRCMROO524FBV6IJYPB6BIOR2OR7DVCRMLQJ5QZB2JDOP6GMIO2X) |
+| **Zing Launchpad** | `CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT) |
+| **Social Booster (Campaigns)** | `CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z) |
+| **Trading Competitions** | `CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW) |
+| **Prediction Markets** | `CAWPDWLWKW7VZ3R7LQGMQAWDBAB3UPTRAGJPH7YYPCKBVYQXVA7GPIFJ` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAWPDWLWKW7VZ3R7LQGMQAWDBAB3UPTRAGJPH7YYPCKBVYQXVA7GPIFJ) |
 
 ---
 
