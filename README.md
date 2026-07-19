@@ -3,8 +3,13 @@
 > _Next-generation execution layer for traders, founders, and AI agents. Soroban-powered, intent-driven, fully chain-abstracted._
 
 [![Network](https://img.shields.io/badge/Network-Stellar%20Testnet-blue)](https://stellar.org)
-[![Soroban](https://img.shields.io/badge/Smart%20Contracts-Soroban-purple)](https://soroban.stellar.org/)
 [![Status](https://img.shields.io/badge/Status-Phase%201%20Live-brightgreen)]()
+
+[![Smart Wallet](https://img.shields.io/badge/Smart%20Wallet-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAMVCRCMROO524FBV6IJYPB6BIOR2OR7DVCRMLQJ5QZB2JDOP6GMIO2X)
+[![Launchpad](https://img.shields.io/badge/Launchpad-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT)
+[![Campaigns](https://img.shields.io/badge/Campaigns-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z)
+[![Competitions](https://img.shields.io/badge/Competitions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW)
+[![Predictions](https://img.shields.io/badge/Predictions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAWPDWLWKW7VZ3R7LQGMQAWDBAB3UPTRAGJPH7YYPCKBVYQXVA7GPIFJ)
 
 Zing is a **Stellar-first, chain-abstracted execution layer** architected to reproduce the institutional trading terminal experience for retail users. Connect a Stellar wallet, fund via Friendbot, and instantly access unified trading, token launches, social campaigns, and trading competitions. Zing treats Stellar as the ultimate settlement layer while seamlessly routing cross-chain liquidity via NEAR Intents, Axelar, and Circle CCTP.
 
