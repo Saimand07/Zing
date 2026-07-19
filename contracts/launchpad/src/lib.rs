@@ -1,5 +1,8 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, vec, Address, BytesN, Env, IntoVal, String, Symbol};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, vec, Address, BytesN, Env, IntoVal, String,
+    Symbol,
+};
 
 #[contracttype]
 pub enum DataKey {
@@ -22,9 +25,14 @@ pub struct LaunchpadContract;
 #[contractimpl]
 impl LaunchpadContract {
     pub fn initialize(env: Env, admin: Address, wasm_hash: BytesN<32>) {
-        assert!(!env.storage().instance().has(&DataKey::Admin), "already initialized");
+        assert!(
+            !env.storage().instance().has(&DataKey::Admin),
+            "already initialized"
+        );
         env.storage().instance().set(&DataKey::Admin, &admin);
-        env.storage().instance().set(&DataKey::TokenWasmHash, &wasm_hash);
+        env.storage()
+            .instance()
+            .set(&DataKey::TokenWasmHash, &wasm_hash);
         env.storage().instance().set(&DataKey::TokensCreated, &0u32);
     }
 
@@ -37,7 +45,11 @@ impl LaunchpadContract {
     ) -> u32 {
         creator.require_auth();
 
-        let mut count: u32 = env.storage().instance().get(&DataKey::TokensCreated).unwrap_or(0);
+        let mut count: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::TokensCreated)
+            .unwrap_or(0);
         count += 1;
 
         let meta = TokenMeta {
@@ -48,14 +60,18 @@ impl LaunchpadContract {
         };
 
         // Deploy the custom token contract
-        let wasm_hash: BytesN<32> = env.storage().instance().get(&DataKey::TokenWasmHash).unwrap();
-        
+        let wasm_hash: BytesN<32> = env
+            .storage()
+            .instance()
+            .get(&DataKey::TokenWasmHash)
+            .unwrap();
+
         // Use a unique salt derived from the count
         let mut salt_bytes = [0u8; 32];
         salt_bytes[0] = count as u8;
         salt_bytes[1] = (count >> 8) as u8;
         let salt = BytesN::from_array(&env, &salt_bytes);
-        
+
         let token_addr = env.deployer().with_current_contract(salt).deploy(wasm_hash);
 
         // Initialize the token contract
@@ -82,7 +98,9 @@ impl LaunchpadContract {
         );
 
         env.storage().persistent().set(&symbol, &meta);
-        env.storage().instance().set(&DataKey::TokensCreated, &count);
+        env.storage()
+            .instance()
+            .set(&DataKey::TokensCreated, &count);
 
         count
     }

@@ -1,7 +1,7 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, symbol_short, token, Address, Env, String, Symbol
+    contract, contractimpl, contracttype, symbol_short, token, Address, Env, String, Symbol,
 };
 
 #[contracttype]
@@ -24,13 +24,7 @@ pub struct PredictionMarket;
 
 #[contractimpl]
 impl PredictionMarket {
-    pub fn initialize(
-        env: Env,
-        admin: Address,
-        token: Address,
-        question: String,
-        end_time: u64,
-    ) {
+    pub fn initialize(env: Env, admin: Address, token: Address, question: String, end_time: u64) {
         if env.storage().instance().has(&DataKey::Admin) {
             panic!("Already initialized");
         }
@@ -45,12 +39,12 @@ impl PredictionMarket {
 
     pub fn bet(env: Env, user: Address, is_yes: bool, amount: i128) {
         user.require_auth();
-        
+
         let resolved: bool = env.storage().instance().get(&DataKey::Resolved).unwrap();
         if resolved {
             panic!("Market already resolved");
         }
-        
+
         let end_time: u64 = env.storage().instance().get(&DataKey::EndTime).unwrap();
         if env.ledger().timestamp() >= end_time {
             panic!("Market closed for betting");

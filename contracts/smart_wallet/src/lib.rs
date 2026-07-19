@@ -1,6 +1,8 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol, Vec, BytesN};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Symbol, Vec,
+};
 
 #[contract]
 pub struct SmartWallet;
@@ -31,11 +33,17 @@ impl SmartWallet {
     pub fn add_recovery(env: Env, recovery: Address) {
         let owner: Address = env.storage().instance().get(&DataKey::Owner).unwrap();
         owner.require_auth();
-        env.storage().instance().set(&DataKey::RecoverySigner, &recovery);
+        env.storage()
+            .instance()
+            .set(&DataKey::RecoverySigner, &recovery);
     }
 
     pub fn recover(env: Env, new_owner: Address) {
-        let recovery: Address = env.storage().instance().get(&DataKey::RecoverySigner).unwrap();
+        let recovery: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::RecoverySigner)
+            .unwrap();
         recovery.require_auth();
         env.storage().instance().set(&DataKey::Owner, &new_owner);
     }
