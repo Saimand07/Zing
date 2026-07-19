@@ -5,6 +5,7 @@ members = [
     "competition",
     "smart_wallet", 
     "prediction_market",
+    "token",
 ]
 resolver = "2"
 

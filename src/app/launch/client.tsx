@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useWallet } from "@/components/wallet-provider";
+import { buildSorobanLaunchTx, submitTx } from "@/lib/stellar-launch";
 
 interface Project {
   id: string;
@@ -63,8 +65,8 @@ function ProjectRow({ p }: { p: Project }) {
       <span style={{ color: "#52525B", fontSize: "11px" }}>
         {new Date(p.created_at).toLocaleDateString()}
       </span>
-      {/* Contract status — all pending per Phase 3 */}
-      <span className="tag tag-pending">Contract pending</span>
+      {/* Contract status */}
+      <span className="tag" style={{ background: "#14532D", color: "#4ADE80", border: "1px solid #166534" }}>Deployed On-Chain</span>
     </div>
   );
 }
@@ -73,6 +75,7 @@ export default function LaunchPadClient({ projects, dbError }: Props) {
   const [showForm, setShowForm]   = useState(false);
   const [saving, setSaving]       = useState(false);
   const [saveMsg, setSaveMsg]     = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const { pubKey, signTransaction } = useWallet();
 
   // Form state — all fields from Zing Doc §7.3
   const [name, setName]               = useState("");
@@ -85,30 +88,45 @@ export default function LaunchPadClient({ projects, dbError }: Props) {
   async function handleLaunch(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !symbol.trim() || !supply) return;
+    if (!pubKey) {
+      setSaveMsg({ type: "err", text: "Please connect your wallet first." });
+      return;
+    }
 
     setSaving(true);
     setSaveMsg(null);
 
-    // Insert into Supabase projects table (schema from Phase 1 migration)
-    const { error } = await supabase.from("projects").insert({
-      name:            name.trim(),
-      symbol:          symbol.trim().toUpperCase(),
-      supply:          parseFloat(supply),
-      category,
-      deployment_type: deployType,
-      metadata:        { description: description.trim() },
-    });
+    try {
+      setSaveMsg({ type: "ok", text: "Building Soroban transaction..." });
+      const xdr = await buildSorobanLaunchTx(pubKey, name.trim(), symbol.trim().toUpperCase(), supply);
 
-    setSaving(false);
+      setSaveMsg({ type: "ok", text: "Please sign the transaction in your wallet..." });
+      const signedXdr = await signTransaction(xdr);
 
-    if (error) {
-      setSaveMsg({ type: "err", text: `Database error: ${error.message}` });
-    } else {
-      setSaveMsg({ type: "ok", text: "Project created and saved to Supabase. Soroban contract deployment is PENDING — no on-chain action executed yet." });
+      setSaveMsg({ type: "ok", text: "Submitting to Stellar Testnet..." });
+      await submitTx(signedXdr);
+
+      // Insert into Supabase projects table after successful on-chain execution
+      const { error } = await supabase.from("projects").insert({
+        name:            name.trim(),
+        symbol:          symbol.trim().toUpperCase(),
+        supply:          parseFloat(supply),
+        category,
+        deployment_type: deployType,
+        metadata:        { description: description.trim() },
+      });
+
+      if (error) throw error;
+
+      setSaveMsg({ type: "ok", text: "Success! Soroban Launchpad contract executed on-chain." });
       setName(""); setSymbol(""); setSupply(""); setDescription("");
       setShowForm(false);
-      // Reload
-      setTimeout(() => window.location.reload(), 1200);
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err: any) {
+      console.error(err);
+      setSaveMsg({ type: "err", text: `Launch failed: ${err.message || err}` });
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -119,8 +137,7 @@ export default function LaunchPadClient({ projects, dbError }: Props) {
         <div>
           <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#F4F4F5", marginBottom: "4px" }}>LaunchPad</h1>
           <p style={{ fontSize: "13px", color: "#71717A", maxWidth: "520px", lineHeight: 1.5 }}>
-            Launch Stellar assets, Soroban tokens, and AI-agent tokens. Liquidity configuration and on-chain minting requires Soroban contracts —{" "}
-            <span className="tag tag-pending" style={{ verticalAlign: "middle" }}>contract deployment pending</span>.
+            Launch Stellar assets, Soroban tokens, and AI-agent tokens natively via the Zing Soroban Launchpad smart contract.
           </p>
         </div>
         <button
@@ -278,8 +295,7 @@ export default function LaunchPadClient({ projects, dbError }: Props) {
               lineHeight: 1.5,
             }}
           >
-            <strong style={{ color: "#A8A29E" }}>Note:</strong> This creates a project record in Supabase. Actual on-chain token minting (Soroban Launchpad contract) is{" "}
-            <span className="tag tag-pending">pending deployment</span>. No XDR will be submitted.
+            <strong style={{ color: "#A8A29E" }}>Note:</strong> Clicking create will prompt your wallet to sign a transaction invoking the live `zing_launchpad` Soroban contract on Stellar Testnet.
           </div>
 
           <div style={{ display: "flex", gap: "12px" }}>

@@ -1,8 +1,12 @@
 import { Keypair, Asset, TransactionBuilder, Operation, Networks } from "@stellar/stellar-sdk";
 import * as StellarSdk from "@stellar/stellar-sdk";
+import { rpc } from "@stellar/stellar-sdk";
 
 const HORIZON_URL = "https://horizon-testnet.stellar.org";
 const server = new StellarSdk.Horizon.Server(HORIZON_URL);
+
+const SOROBAN_URL = "https://soroban-testnet.stellar.org";
+const sorobanServer = new rpc.Server(SOROBAN_URL);
 
 /**
  * Creates a new random Issuer Keypair and funds it via Friendbot.
@@ -75,4 +79,36 @@ export async function buildAndSignMintTx(issuer: Keypair, distributorPubKey: str
 
   tx.sign(issuer);
   return tx.toXDR();
+}
+
+/**
+ * Builds a Soroban transaction to invoke the launchpad contract.
+ */
+export async function buildSorobanLaunchTx(
+  userPubKey: string,
+  name: string,
+  symbol: string,
+  totalSupply: string
+) {
+  const account = await server.loadAccount(userPubKey);
+  const contractId = process.env.NEXT_PUBLIC_LAUNCHPAD_CONTRACT;
+  if (!contractId) throw new Error("Missing NEXT_PUBLIC_LAUNCHPAD_CONTRACT in .env.local");
+
+  const contract = new StellarSdk.Contract(contractId);
+  
+  const creatorScVal = new StellarSdk.Address(userPubKey).toScVal();
+  const nameScVal = StellarSdk.xdr.ScVal.scvString(name);
+  const symbolScVal = StellarSdk.xdr.ScVal.scvString(symbol);
+  const supplyScVal = StellarSdk.nativeToScVal(BigInt(totalSupply), { type: "i128" });
+
+  const tx = new TransactionBuilder(account, {
+    fee: "100000",
+    networkPassphrase: Networks.TESTNET
+  })
+    .addOperation(contract.call("launch_token", creatorScVal, nameScVal, symbolScVal, supplyScVal))
+    .setTimeout(60)
+    .build();
+
+  const preparedTx = await sorobanServer.prepareTransaction(tx);
+  return preparedTx.toXDR();
 }

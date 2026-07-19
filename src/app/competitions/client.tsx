@@ -200,10 +200,19 @@ export default function CompetitionsClient({ competitions, entries, dbError }: P
     setSaving(true);
     setSaveMsg(null);
 
+    const parsedStart = new Date(startDate);
+    const parsedEnd = new Date(endDate);
+
+    if (isNaN(parsedStart.getTime()) || isNaN(parsedEnd.getTime())) {
+      setSaveMsg({ type: "err", text: "Invalid date selected." });
+      setSaving(false);
+      return;
+    }
+
     const { error } = await supabase.from("competitions").insert({
       asset_tracked:      asset,
-      time_window_start:  new Date(startDate).toISOString(),
-      time_window_end:    new Date(endDate).toISOString(),
+      time_window_start:  parsedStart.toISOString(),
+      time_window_end:    parsedEnd.toISOString(),
       reward_tiers:       tiers,
       scoring_weights:    {
         liquidityQuality:           0.3,
