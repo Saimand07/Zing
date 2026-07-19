@@ -87,15 +87,28 @@ export async function buildLiquidityPoolTx(
   const account = await server.loadAccount(pubKey);
   const fee = await server.fetchBaseFee();
 
+  // Liquidity pool assets MUST be in strict lexicographic order.
+  let finalAssetA = assetA;
+  let finalAssetB = assetB;
+  let finalAmountA = amountA;
+  let finalAmountB = amountB;
+
+  if (StellarSdk.Asset.compare(assetA, assetB) === 1) {
+    finalAssetA = assetB;
+    finalAssetB = assetA;
+    finalAmountA = amountB;
+    finalAmountB = amountA;
+  }
+
   const lpId = StellarSdk.getLiquidityPoolId("constant_product", {
-    assetA,
-    assetB,
+    assetA: finalAssetA,
+    assetB: finalAssetB,
     fee: StellarSdk.LiquidityPoolFeeV18
   }).toString("hex");
 
-  const poolAsset = new StellarSdk.LiquidityPoolAsset(assetA, assetB, StellarSdk.LiquidityPoolFeeV18);
+  const poolAsset = new StellarSdk.LiquidityPoolAsset(finalAssetA, finalAssetB, StellarSdk.LiquidityPoolFeeV18);
 
-  const tx = new TransactionBuilder(account, { fee, networkPassphrase: Networks.TESTNET })
+  const tx = new TransactionBuilder(account, { fee: fee.toString(), networkPassphrase: Networks.TESTNET })
     .addOperation(
       Operation.changeTrust({
         asset: poolAsset
@@ -104,8 +117,8 @@ export async function buildLiquidityPoolTx(
     .addOperation(
       Operation.liquidityPoolDeposit({
         liquidityPoolId: lpId,
-        maxAmountA: amountA,
-        maxAmountB: amountB,
+        maxAmountA: finalAmountA,
+        maxAmountB: finalAmountB,
         minPrice: "0.001",
         maxPrice: "100000" 
       })

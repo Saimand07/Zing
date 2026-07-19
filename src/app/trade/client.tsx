@@ -61,7 +61,7 @@ function PriceChart({ data }: { data: TradeAgg[] }) {
   const lineColor = isUp ? "#22C55E" : "#EF4444";
 
   return (
-    <div style={{ borderBottom: "1px solid #27272A", background: "#09090B" }}>
+    <div style={{ borderBottom: "1px solid #27272A", background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)" }}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
@@ -133,7 +133,7 @@ function PairHeader({
         alignItems: "center",
         gap: "32px",
         flexWrap: "wrap",
-        background: "#111113",
+        background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
       }}
     >
       {/* Pair Name */}
@@ -938,7 +938,7 @@ export default function TradingTerminal() {
             style={{
               display: "flex",
               borderBottom: "1px solid #27272A",
-              background: "#111113",
+              background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
             }}
           >
             {(["chart", "info"] as const).map((t) => (

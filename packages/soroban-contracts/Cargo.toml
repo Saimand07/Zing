@@ -3,7 +3,7 @@ members = [
     "contracts/launchpad",
     "contracts/campaign",
     "contracts/competition",
-    "contracts/smart_wallet",
+    "contracts/smart_wallet", "contracts/prediction_market",
 ]
 resolver = "2"
 

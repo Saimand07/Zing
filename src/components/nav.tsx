@@ -1,17 +1,57 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useWallet } from "./wallet-provider";
+import { Search, Rocket, Wallet, Bell, User } from "lucide-react";
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { openSidebar, pubKey } = useWallet();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  
   const notifRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
-  const isActive = (path: string) => pathname.startsWith(path);
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      router.push(`/trade?asset=${searchQuery.trim().toUpperCase()}`);
+      setSearchQuery("");
+      setIsSearchOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchSearch = async () => {
+      if (!searchQuery.trim()) {
+        try {
+          const res = await fetch("https://api.coingecko.com/api/v3/search/trending");
+          const data = await res.json();
+          setSearchResults(data.coins?.slice(0, 5).map((c: any) => c.item) || []);
+        } catch (e) {}
+        setIsSearching(false);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${searchQuery}`);
+        const data = await res.json();
+        setSearchResults(data.coins?.slice(0, 5) || []);
+      } catch (e) {
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounce = setTimeout(fetchSearch, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -19,68 +59,107 @@ export default function Nav() {
       if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setIsNotifOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
     }
-    if (isNotifOpen) document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isNotifOpen]);
+  }, []);
 
   if (pathname === "/") return null;
 
   return (
-    <div style={{ position: "sticky", top: "16px", zIndex: 50, display: "flex", justifyContent: "center", width: "100%", paddingBottom: "16px", marginTop: "16px" }}>
+    <div style={{ position: "sticky", top: 0, zIndex: 40, width: "100%", background: "rgba(9, 9, 11, 0.8)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
       <nav style={{ 
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        width: "calc(100% - 48px)", maxWidth: "1100px",
-        background: "rgba(10, 10, 10, 0.6)",
-        backdropFilter: "blur(12px)",
-        border: "1px solid #2C2C2C",
-        borderRadius: "70px",
-        padding: "12px 20px",
-        position: "relative"
+        padding: "16px 24px",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-          <Link href="/" style={{ fontSize: "20px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff", textDecoration: "none" }}>
-            ZING
-          </Link>
-
-          <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
-            <Link href="/dashboard" style={{ fontSize: "14px", fontWeight: 500, color: isActive("/dashboard") ? "#fff" : "#A1A1AA", textDecoration: "none", transition: "color 0.2s" }}>Trade</Link>
-            <Link href="/launch" style={{ fontSize: "14px", fontWeight: 500, color: isActive("/launch") ? "#fff" : "#A1A1AA", textDecoration: "none", transition: "color 0.2s" }}>LaunchZone</Link>
-            <Link href="/social-booster" style={{ fontSize: "14px", fontWeight: 500, color: isActive("/social-booster") ? "#fff" : "#A1A1AA", textDecoration: "none", transition: "color 0.2s" }}>Social Booster</Link>
-            <Link href="/competitions" style={{ fontSize: "14px", fontWeight: 500, color: isActive("/competitions") ? "#fff" : "#A1A1AA", textDecoration: "none", transition: "color 0.2s" }}>Competitions</Link>
-          </div>
+        {/* Left Side: Page Context (Optional for TopBar) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+           <div style={{ fontSize: "16px", fontWeight: 600, color: "#fff" }}>
+             {pathname.replace('/', '').charAt(0).toUpperCase() + pathname.replace('/', '').slice(1)}
+           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {/* Search Bar */}
-          <div style={{ position: "relative" }}>
+        {/* Right Side Tools */}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <div ref={searchRef} style={{ position: "relative" }}>
             <input 
               type="text" 
-              placeholder="Search tokens by name or contract" 
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
+              onKeyDown={handleSearch}
+              placeholder="Search assets (Press Enter)" 
               style={{ 
-                background: "#18181B", border: "1px solid #27272A", borderRadius: "900px",
-                padding: "8px 12px 8px 36px", fontSize: "13px", color: "#F4F4F5", width: "240px", outline: "none"
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "6px",
+                padding: "6px 16px 6px 36px", fontSize: "12px", color: "#F4F4F5", width: "220px", outline: "none", transition: "all 0.2s"
               }} 
             />
-            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "14px", color: "#71717A" }}>🔍</span>
+            <Search size={14} color="#71717A" style={{ position: "absolute", left: "12px", top: "12px" }} />
+            
+            {/* Autocomplete Dropdown */}
+            {isSearchOpen && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 8px)", left: 0, width: "100%",
+                background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.5)", overflow: "hidden", zIndex: 100
+              }}>
+                <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "11px", color: "#A1A1AA", fontWeight: 600, textTransform: "uppercase" }}>
+                  {searchQuery ? "Search Results" : "Trending Assets"}
+                </div>
+                <div style={{ maxHeight: "250px", overflowY: "auto" }}>
+                  {isSearching ? (
+                    <div style={{ padding: "12px", fontSize: "12px", color: "#71717A", textAlign: "center" }}>Searching...</div>
+                  ) : searchResults.length > 0 ? (
+                    searchResults.map((item, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => {
+                          router.push(`/trade?asset=${item.symbol.toUpperCase()}`);
+                          setSearchQuery("");
+                          setIsSearchOpen(false);
+                        }}
+                        style={{ padding: "10px 12px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.02)" }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+                      >
+                        <img src={item.thumb || item.large} alt={item.symbol} style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>{item.symbol.toUpperCase()}</div>
+                          <div style={{ fontSize: "11px", color: "#71717A" }}>{item.name}</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                     <div style={{ padding: "12px", fontSize: "12px", color: "#71717A", textAlign: "center" }}>No assets found</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Network Selector Mock */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#18181B", padding: "6px 12px", borderRadius: "900px", border: "1px solid #27272A" }}>
-            <span style={{ fontSize: "14px" }}>🚀</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.03)", padding: "6px 12px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)", cursor: "pointer" }}>
+            <Rocket size={14} color="#F59E0B" />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "#fff" }}>Stellar</span>
           </div>
 
           {/* Wallet Button */}
           <button 
             onClick={openSidebar}
             style={{ 
-              background: "#fff", border: "none", borderRadius: "900px",
-              padding: "8px 16px", fontSize: "13px", fontWeight: 700, color: "#000",
-              display: "flex", alignItems: "center", gap: "6px", cursor: "pointer",
+              background: "#3B82F6", border: "none", borderRadius: "6px",
+              padding: "6px 16px", fontSize: "12px", fontWeight: 700, color: "#fff",
+              display: "flex", alignItems: "center", gap: "8px", cursor: "pointer",
               transition: "transform 0.2s"
             }}
           >
-            <span style={{ fontSize: "14px" }}>👛</span>
+            <Wallet size={14} color="#fff" />
             {pubKey ? `${pubKey.substring(0, 4)}...${pubKey.substring(pubKey.length - 4)}` : "Wallet"}
           </button>
 
@@ -88,51 +167,41 @@ export default function Nav() {
           <div ref={notifRef} style={{ position: "relative" }}>
             <button 
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              style={{ background: "transparent", border: "none", color: isNotifOpen ? "#fff" : "#A1A1AA", cursor: "pointer", fontSize: "16px", padding: "6px 4px", transition: "color 0.2s" }} 
+              style={{ background: "transparent", border: "none", color: isNotifOpen ? "#fff" : "#A1A1AA", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", transition: "color 0.2s" }} 
             >
-              🔔
+              <Bell size={18} />
             </button>
 
             {/* Dropdown Panel */}
             {isNotifOpen && (
               <div style={{ 
-                position: "absolute", top: "calc(100% + 16px)", right: "-40px", width: "320px",
-                background: "#111113", border: "1px solid #27272A", borderRadius: "12px",
+                position: "absolute", top: "calc(100% + 12px)", right: 0, width: "320px",
+                background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "8px",
                 boxShadow: "0 10px 40px rgba(0,0,0,0.5)", overflow: "hidden", zIndex: 100 
               }}>
-                <div style={{ padding: "16px", borderBottom: "1px solid #27272A", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ color: "#fff", fontSize: "14px", fontWeight: 600 }}>Notifications</span>
-                  <button onClick={() => setIsNotifOpen(false)} style={{ background: "transparent", border: "none", color: "#A1A1AA", fontSize: "12px", cursor: "pointer" }}>Mark all as read</button>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ color: "#fff", fontSize: "13px", fontWeight: 600 }}>Notifications</span>
+                  <button onClick={() => setIsNotifOpen(false)} style={{ background: "transparent", border: "none", color: "#A1A1AA", fontSize: "11px", cursor: "pointer" }}>Mark read</button>
                 </div>
                 <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                  <div style={{ padding: "16px", borderBottom: "1px solid #27272A", display: "flex", gap: "12px" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3B82F6", marginTop: "6px" }} />
+                  <div style={{ padding: "16px", borderBottom: "1px solid rgba(255,255,255,0.02)", display: "flex", gap: "12px" }}>
+                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3B82F6", marginTop: "4px" }} />
                     <div>
-                      <div style={{ color: "#fff", fontSize: "13px", fontWeight: 500, marginBottom: "4px" }}>Limit Order Filled</div>
-                      <div style={{ color: "#A1A1AA", fontSize: "12px", lineHeight: 1.4 }}>Your order to sell 500 XLM for USDC was completely filled on the DEX.</div>
-                      <div style={{ color: "#71717A", fontSize: "11px", marginTop: "6px" }}>2 mins ago</div>
+                      <div style={{ color: "#fff", fontSize: "12px", fontWeight: 600, marginBottom: "2px" }}>Limit Order Filled</div>
+                      <div style={{ color: "#A1A1AA", fontSize: "11px", lineHeight: 1.4 }}>Your order to sell 500 XLM for USDC was completely filled.</div>
                     </div>
                   </div>
-                  <div style={{ padding: "16px", display: "flex", gap: "12px" }}>
-                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981", marginTop: "6px" }} />
-                    <div>
-                      <div style={{ color: "#fff", fontSize: "13px", fontWeight: 500, marginBottom: "4px" }}>Liquidity Pool Seeded</div>
-                      <div style={{ color: "#A1A1AA", fontSize: "12px", lineHeight: 1.4 }}>Successfully deposited 100 XLM into the AMM liquidity pool.</div>
-                      <div style={{ color: "#71717A", fontSize: "11px", marginTop: "6px" }}>1 hour ago</div>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ padding: "12px", background: "#09090B", textAlign: "center", borderTop: "1px solid #27272A" }}>
-                  <button style={{ background: "transparent", border: "none", color: "#F4F4F5", fontSize: "13px", fontWeight: 500, cursor: "pointer" }}>View All Activity</button>
                 </div>
               </div>
             )}
           </div>
 
+          <div style={{ width: "1px", height: "24px", background: "rgba(255,255,255,0.1)" }} />
+
           {/* Profile / Settings */}
-          <Link href="/settings" style={{ padding: "6px 4px", color: "#A1A1AA", textDecoration: "none", fontSize: "16px", transition: "color 0.2s" }}>
-            👤
-          </Link>
+          <button style={{ padding: "4px", background: "transparent", border: "none", color: "#A1A1AA", cursor: "pointer", display: "flex", alignItems: "center", transition: "color 0.2s" }}>
+            <User size={18} />
+          </button>
         </div>
       </nav>
     </div>

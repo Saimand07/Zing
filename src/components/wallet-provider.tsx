@@ -7,6 +7,8 @@ import { AlbedoModule } from "@creit.tech/stellar-wallets-kit/modules/albedo";
 import { xBullModule } from "@creit.tech/stellar-wallets-kit/modules/xbull";
 
 import { fundWithFriendbot } from "../lib/stellar";
+import { createStellarWallet } from "@/lib/wallet";
+import { useAuth } from "./auth-provider";
 
 import { useToast } from "@/components/toast-provider";
 
@@ -24,6 +26,7 @@ interface WalletContextType {
   pubKey: string | null;
   setPubKey: (key: string | null) => void;
   connectWallet: (walletId: string) => Promise<void>;
+  createNativeWallet: () => Promise<void>;
   getSupportedWallets: () => Promise<any[]>;
   disconnectWallet: () => void;
   activeWalletId: string | null;
@@ -37,6 +40,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [pubKey, setPubKey] = useState<string | null>(null);
   const [activeWalletId, setActiveWalletId] = useState<string | null>(null);
   const { showToast } = useToast();
+  const { user } = useAuth();
 
   // Restore session
   useEffect(() => {
@@ -64,8 +68,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Wallet module for "${walletId}" is not initialized.`);
       }
 
+      console.log(`Checking availability for ${walletId}...`);
+      const available = await module.isAvailable();
+      if (!available) {
+        if (walletId === "freighter") {
+          throw new Error("Freighter wallet extension is not installed. Please install it from the Chrome Web Store.");
+        }
+        throw new Error(`The ${walletId} wallet extension is not installed or not available.`);
+      }
+
       console.log(`Connecting to ${walletId}...`);
-      const { address } = await module.getAddress();
+      const result = module.getPublicKey ? await module.getPublicKey() : await module.getAddress();
+      const address = typeof result === "string" ? result : (result?.address || result?.publicKey);
+
+      if (!address) {
+        throw new Error("Failed to retrieve address from wallet.");
+      }
       
       setPubKey(address);
       setActiveWalletId(walletId);
@@ -77,8 +95,40 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       fundWithFriendbot(address).catch(console.error);
     } catch (e: any) {
       console.error("Wallet connection error:", e);
-      const errMsg = e?.message || (typeof e === "string" ? e : "Unknown error");
+      let errMsg = "Unknown error";
+      if (typeof e === "string") errMsg = e;
+      else if (e instanceof Error) errMsg = e.message;
+      else if (e && e.error) errMsg = e.error;
+      else if (e && e.message) errMsg = e.message;
+      else if (e && typeof e === 'object' && Object.keys(e).length === 0) {
+        errMsg = "User rejected the connection request.";
+      } else {
+        errMsg = "User declined connection or wallet not available";
+      }
+
       showToast(`Wallet Connection Failed: ${errMsg}\n\nPlease ensure your wallet extension is installed and unlocked.`, "error");
+    }
+  };
+
+  const createNativeWallet = async () => {
+    if (!user) {
+      showToast("Please log in with Twitter first to generate a native wallet.", "error");
+      return;
+    }
+    try {
+      const { publicKey } = await createStellarWallet(user.id);
+      setPubKey(publicKey);
+      setActiveWalletId("native");
+      localStorage.setItem("zing_wallet_pubkey", publicKey);
+      localStorage.setItem("zing_wallet_id", "native");
+      setIsSidebarOpen(false);
+      showToast("Native wallet generated successfully!", "success");
+      
+      // Auto-fund on testnet
+      fundWithFriendbot(publicKey).catch(console.error);
+    } catch (e: any) {
+      console.error("Native wallet creation error:", e);
+      showToast("Failed to create native wallet.", "error");
     }
   };
 
@@ -107,6 +157,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         pubKey,
         setPubKey,
         connectWallet,
+        createNativeWallet,
         getSupportedWallets,
         disconnectWallet,
         activeWalletId,

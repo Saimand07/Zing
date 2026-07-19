@@ -23,7 +23,7 @@ function StatCard({ label, value, sub, href }: { label: string; value: string | 
     <div
       style={{
         padding: "20px",
-        background: "#111113",
+        background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
         border: "1px solid #27272A",
         borderRadius: "8px",
       }}
@@ -251,7 +251,7 @@ export default function DashboardClient({
           padding: "16px 20px",
           border: "1px solid #27272A",
           borderRadius: "8px",
-          background: "#111113",
+          background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
         }}
       >
         <div style={{ fontSize: "12px", fontWeight: 600, color: "#71717A", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>

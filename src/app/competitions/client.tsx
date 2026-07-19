@@ -43,7 +43,7 @@ function CompetitionCard({ c, entries }: { c: Competition; entries: Entry[] }) {
         border: "1px solid #27272A",
         borderRadius: "8px",
         padding: "20px",
-        background: "#111113",
+        background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
       }}
     >
       {/* Header */}
@@ -273,7 +273,7 @@ export default function CompetitionsClient({ competitions, entries, dbError }: P
             borderRadius: "8px",
             padding: "24px",
             marginBottom: "32px",
-            background: "#111113",
+            background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
           }}
         >
           <h2 style={{ fontSize: "14px", fontWeight: 600, color: "#F4F4F5", marginBottom: "20px" }}>

@@ -9,11 +9,10 @@
 export interface CctpDomainConfig {
   domainId: number;
   chainName: string;
-  tokenMessengerAddress: string;
-  messageTransmitterAddress: string;
+  tokenMessengerAddress?: string;
+  messageTransmitterAddress?: string;
 }
 
-// CCTP Domains (as of current docs, Stellar is a specific domain, Ethereum is 0)
 export const CCTP_DOMAINS: Record<string, CctpDomainConfig> = {
   ethereum: {
     domainId: 0,
@@ -21,8 +20,12 @@ export const CCTP_DOMAINS: Record<string, CctpDomainConfig> = {
     tokenMessengerAddress: "0x...", // TODO: Populate with official mainnet address
     messageTransmitterAddress: "0x...",
   },
+  avalanche: { domainId: 1, chainName: "Avalanche" },
+  optimism: { domainId: 2, chainName: "Optimism" },
+  arbitrum: { domainId: 3, chainName: "Arbitrum" },
+  solana: { domainId: 5, chainName: "Solana" },
   stellar: {
-    domainId: 5, // UNVERIFIED: Confirm actual Stellar domain ID on mainnet
+    domainId: 6, // NOTE: Stellar is officially domain 6 on testnet
     chainName: "stellar",
     tokenMessengerAddress: "C...", // Soroban contract ID
     messageTransmitterAddress: "C...",
@@ -36,20 +39,6 @@ export interface InitiateTransferRequest {
   mintRecipient: string; // Destination address
   sourceSignerSecret?: string; // If executing on server, or use wallet directly
 }
-
-export interface CctpDomainConfig {
-  domainId: number;
-  chainName: string;
-}
-
-export const CCTP_DOMAINS: Record<string, CctpDomainConfig> = {
-  ethereum: { domainId: 0, chainName: "Ethereum" },
-  avalanche: { domainId: 1, chainName: "Avalanche" },
-  optimism: { domainId: 2, chainName: "Optimism" },
-  arbitrum: { domainId: 3, chainName: "Arbitrum" },
-  solana: { domainId: 5, chainName: "Solana" },
-  stellar: { domainId: 6, chainName: "Stellar" }, // NOTE: Stellar is officially domain 6 on testnet
-};
 
 export class CctpClient {
   private irisApiUrl: string;

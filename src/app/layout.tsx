@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/nav";
+import AppSidebar from "@/components/app-sidebar";
 import { WalletProvider } from "@/components/wallet-provider";
 import { ToastProvider } from "@/components/toast-provider";
 import WalletSidebar from "@/components/wallet-sidebar";
+import { AuthProvider } from "@/components/auth-provider";
+import { AppBackground } from "@/components/app-background";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,14 +42,20 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col" style={{ background: "#09090B", color: "#F4F4F5" }}>
-        <ToastProvider>
-          <WalletProvider>
-            <Nav />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <WalletSidebar />
-          </WalletProvider>
-        </ToastProvider>
+      <body suppressHydrationWarning className="min-h-full flex" style={{ background: "#09090B", color: "#F4F4F5" }}>
+        <AppBackground />
+        <AuthProvider>
+          <ToastProvider>
+            <WalletProvider>
+              <AppSidebar />
+              <div className="flex-1 flex flex-col min-h-screen">
+                <Nav />
+                <main className="flex-1 flex flex-col overflow-y-auto">{children}</main>
+              </div>
+              <WalletSidebar />
+            </WalletProvider>
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );

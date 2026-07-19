@@ -22,14 +22,14 @@ export function PortfolioWidget() {
 
   if (!pubKey) {
     return (
-      <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
+      <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid #27272A", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
         <p style={{ color: "#A1A1AA", fontSize: "14px", marginBottom: "12px" }}>Connect your wallet to view your real on-chain portfolio.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "20px", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid #27272A", padding: "20px", display: "flex", flexDirection: "column" }}>
       <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#fff", marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
         💼 My Portfolio
       </h3>
@@ -46,7 +46,7 @@ export function PortfolioWidget() {
             const balanceNum = parseFloat(b.balance);
             
             return (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "#09090B", borderRadius: "8px", border: "1px solid #3F3F46" }}>
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)", borderRadius: "8px", border: "1px solid #3F3F46" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: isNative ? "#141629" : "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "bold", color: "#fff", border: "1px solid rgba(255,255,255,0.1)" }}>
                     {code?.substring(0, 3)}

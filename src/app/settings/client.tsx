@@ -57,7 +57,7 @@ export default function SettingsClient() {
         </div>
 
         {/* Content area */}
-        <div style={{ flex: 1, background: "#111113", border: "1px solid #27272A", borderRadius: "8px", padding: "24px" }}>
+        <div style={{ flex: 1, background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid #27272A", borderRadius: "8px", padding: "24px" }}>
           {activeTab === "wallet" && (
             <form onSubmit={handleSaveWallet}>
               <h2 style={{ fontSize: "16px", fontWeight: 600, color: "#F4F4F5", marginBottom: "8px" }}>

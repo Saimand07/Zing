@@ -157,7 +157,7 @@ export default function LaunchPadClient({ projects, dbError }: Props) {
             borderRadius: "8px",
             padding: "24px",
             marginBottom: "32px",
-            background: "#111113",
+            background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
           }}
         >
           <h2 style={{ fontSize: "14px", fontWeight: 600, color: "#F4F4F5", marginBottom: "20px" }}>
@@ -335,7 +335,7 @@ export default function LaunchPadClient({ projects, dbError }: Props) {
             gridTemplateColumns: "1fr 80px 120px 150px 120px",
             padding: "10px 20px",
             borderBottom: "1px solid #27272A",
-            background: "#111113",
+            background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)",
             fontSize: "10px",
             color: "#52525B",
             textTransform: "uppercase",

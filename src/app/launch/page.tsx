@@ -1,231 +1,162 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useWallet } from "@/components/wallet-provider";
-import { useToast } from "@/components/toast-provider";
-import { createAndFundIssuer, buildTrustlineTx, submitTx, buildAndSignMintTx } from "@/lib/stellar-launch";
-import { Networks } from "@stellar/stellar-sdk";
 import { supabase } from "@/lib/supabase";
 
-export default function LaunchZonePage() {
-  const { pubKey, signTransaction } = useWallet();
-  const { showToast } = useToast();
-  
-  const [name, setName] = useState("");
-  const [symbol, setSymbol] = useState("");
-  const [supply, setSupply] = useState("");
-  const [tokenType, setTokenType] = useState<"sac" | "classic">("sac");
-  const [chains, setChains] = useState<string[]>([]);
-  
-  const [isLaunching, setIsLaunching] = useState(false);
-  const [statusText, setStatusText] = useState("");
-  const [launchResult, setLaunchResult] = useState<{ issuer: string; asset: string } | null>(null);
+const MOCK_PROJECTS = [
+  { id: '1', name: 'Zing Dex', symbol: 'ZING', metadata: { category: 'DeFi', logo: '' } },
+  { id: '2', name: 'Pepe', symbol: 'PEPE', metadata: { category: 'Meme', logo: '' } },
+  { id: '3', name: 'Arbitrum AI', symbol: 'ARBAI', metadata: { category: 'AI Agent', logo: '' } },
+  { id: '4', name: 'RWA Estate', symbol: 'RWAE', metadata: { category: 'RWA', logo: '' } }
+];
 
-  const toggleChain = (c: string) => {
-    if (chains.includes(c)) {
-      setChains(chains.filter((x) => x !== c));
-    } else {
-      setChains([...chains, c]);
-    }
-  };
+export default function LaunchBoardPage() {
+  const [projects, setProjects] = useState<any[]>(MOCK_PROJECTS);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleLaunch = async () => {
-    if (!pubKey) {
-      showToast("Please connect your wallet first.", "error");
-      return;
-    }
-    if (!name || !symbol || !supply) {
-      showToast("Please fill in all required token details.", "error");
-      return;
-    }
-    
-    // Quick validation
-    if (symbol.length > 12) {
-      showToast("Symbol must be 12 characters or less.", "error");
-      return;
-    }
-    if (Number(supply) <= 0) {
-      showToast("Supply must be greater than 0.", "error");
-      return;
-    }
+  useEffect(() => {
+    async function loadProjects() {
+      // 1. Fetch from Supabase (if configured)
+      let dbProjects = [];
+      try {
+        if (supabase) {
+          const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false }).limit(20);
+          if (data && data.length > 0) dbProjects = data;
+        }
+      } catch(e) {}
 
-    setIsLaunching(true);
-    setLaunchResult(null);
-    try {
-      // 1. Create and Fund Issuer
-      setStatusText("Generating and funding Issuer account...");
-      const issuerKp = await createAndFundIssuer();
-      
-      // 2. Build and sign Trustline Tx
-      setStatusText("Waiting for wallet signature (Trustline)...");
-      const trustlineXdr = await buildTrustlineTx(pubKey, symbol, issuerKp.publicKey());
-      const signedTrustlineXdr = await signTransaction(trustlineXdr, Networks.TESTNET);
-      
-      setStatusText("Submitting Trustline to Stellar...");
-      await submitTx(signedTrustlineXdr);
-      
-      // 3. Build, sign (with issuer), and submit Mint Tx
-      setStatusText("Minting supply and locking Issuer...");
-      const mintXdr = await buildAndSignMintTx(issuerKp, pubKey, symbol, supply);
-      await submitTx(mintXdr);
+      // 2. Fetch from localStorage
+      let localProjects = [];
+      try {
+        const stored = localStorage.getItem('zing_local_projects');
+        if (stored) localProjects = JSON.parse(stored);
+      } catch(e) {}
 
-      setStatusText("Saving token details...");
-      if (supabase) {
-        await supabase.from("projects").insert({
-          name: name || symbol,
-          symbol: symbol,
-          supply: parseFloat(supply),
-          metadata: { issuer: issuerKp.publicKey(), type: tokenType },
-          category: "Token",
-          deployment_type: "stellar"
-        });
-      }
+      // 3. Merge and deduplicate by symbol, or just prepend local ones
+      let all = [...localProjects, ...dbProjects];
+      if (all.length === 0) all = MOCK_PROJECTS;
       
-      setStatusText("Launch Complete!");
-      showToast(`Successfully launched ${supply} ${symbol}!`, "success");
-      setLaunchResult({ issuer: issuerKp.publicKey(), asset: symbol });
-    } catch (e: any) {
-      console.error(e);
-      showToast(`Launch failed: ${e.message || "Unknown error"}`, "error");
-    } finally {
-      setIsLaunching(false);
-      if (statusText !== "Launch Complete!") {
-        setStatusText("");
-      }
+      setProjects(all);
+      setIsLoading(false);
     }
-  };
+    loadProjects();
+  }, []);
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 24px", fontFamily: "var(--font-geist-sans)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px" }}>
-        <div>
-          <h1 style={{ fontSize: "32px", fontWeight: 600, color: "#fff", marginBottom: "8px", letterSpacing: "-0.5px" }}>
-            LaunchZone
-          </h1>
-          <p style={{ color: "#A1A1AA", fontSize: "16px" }}>Deploy Stellar native assets and Soroban smart tokens.</p>
+    <div style={{ padding: "0", fontFamily: "var(--font-geist-sans)", background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)", minHeight: "100%", display: "flex", flexDirection: "column" }}>
+      
+      {/* Top Banners */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", padding: "24px" }}>
+        <div style={{ background: "linear-gradient(135deg, #0A1128, #0B1930)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "12px", padding: "16px", position: "relative", overflow: "hidden" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Zing</div>
+          <div style={{ fontSize: "13px", color: "#A1A1AA" }}>Season 2 is Live</div>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginTop: "16px", background: "rgba(59,130,246,0.1)", display: "inline-block", padding: "6px 12px", borderRadius: "16px" }}>
+            $1,000,000 Share Awaits!
+          </div>
         </div>
-        <Link href="/dashboard" style={{ background: "#27272A", padding: "10px 20px", borderRadius: "6px", color: "#F4F4F5", textDecoration: "none", fontSize: "14px", fontWeight: 500, transition: "background 0.2s" }}>
-          Back to Dashboard
-        </Link>
+        <div style={{ background: "linear-gradient(135deg, #111827, #030712)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "16px" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Zing</div>
+          <div style={{ fontSize: "13px", color: "#A1A1AA", marginBottom: "16px" }}>Explore Zing and Get</div>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "#F59E0B" }}>Your $50 💸 Bonus Now!</div>
+        </div>
+        <div style={{ background: "linear-gradient(135deg, #451A03, #27272A)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "12px", padding: "16px" }}>
+           <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Core</div>
+          <div style={{ fontSize: "13px", color: "#A1A1AA", lineHeight: "1.4" }}>Explore Core Blockchain Is Available</div>
+        </div>
+        <div style={{ background: "linear-gradient(135deg, #1E1B4B, #0F172A)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "12px", padding: "16px" }}>
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Scroll</div>
+          <div style={{ fontSize: "13px", color: "#A1A1AA", lineHeight: "1.4" }}>Network Now Live!</div>
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "40px" }}>
-        {/* Launch Form */}
-        <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "40px" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#fff", marginBottom: "32px", letterSpacing: "-0.2px" }}>Token Configuration</h2>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-            <div style={{ display: "flex", gap: "20px" }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ display: "block", fontSize: "13px", color: "#A1A1AA", marginBottom: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>Token Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Agent Zero" style={{ width: "100%", background: "#09090B", border: "1px solid #3F3F46", padding: "14px 16px", borderRadius: "6px", color: "#fff", fontSize: "15px", outline: "none" }} />
-              </div>
-              <div style={{ width: "160px" }}>
-                <label style={{ display: "block", fontSize: "13px", color: "#A1A1AA", marginBottom: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>Symbol</label>
-                <input type="text" value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AGZ" maxLength={12} style={{ width: "100%", background: "#09090B", border: "1px solid #3F3F46", padding: "14px 16px", borderRadius: "6px", color: "#fff", fontSize: "15px", outline: "none" }} />
-              </div>
-            </div>
+      {/* Hero Section */}
+      <div style={{ textAlign: "center", padding: "60px 24px", position: "relative", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <h1 style={{ fontSize: "40px", fontWeight: 700, color: "#fff", marginBottom: "24px", letterSpacing: "-1px" }}>Launch Everything & Everywhere</h1>
+        <div style={{ display: "flex", justifyContent: "center", gap: "16px" }}>
+          <Link href="/launch/create" style={{ background: "#fff", color: "#000", padding: "12px 24px", borderRadius: "8px", fontWeight: 700, fontSize: "15px", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}>
+            🚀 Launch Now
+          </Link>
+          <button style={{ background: "transparent", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", padding: "12px 24px", borderRadius: "8px", fontWeight: 600, fontSize: "15px", cursor: "pointer" }}>
+            How it Works?
+          </button>
+        </div>
+      </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "13px", color: "#A1A1AA", marginBottom: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Supply</label>
-              <input type="number" value={supply} onChange={(e) => setSupply(e.target.value)} placeholder="1000000000" style={{ width: "100%", background: "#09090B", border: "1px solid #3F3F46", padding: "14px 16px", borderRadius: "6px", color: "#fff", fontSize: "15px", outline: "none" }} />
-            </div>
+      {/* Token List */}
+      <div style={{ padding: "24px" }}>
+        
+        {/* Filters bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px", padding: "12px 20px", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
+           <input type="text" placeholder="Search tokens by name or contract" style={{ background: "transparent", border: "none", color: "#fff", fontSize: "14px", width: "300px", outline: "none" }} />
+           <div style={{ width: "1px", height: "24px", background: "rgba(255,255,255,0.1)", margin: "0 8px" }} />
+           <div style={{ display: "flex", gap: "12px" }}>
+             {["Meme", "AI Agent", "DeFi", "Gaming"].map(c => (
+               <div key={c} style={{ fontSize: "13px", color: "#A1A1AA", fontWeight: 500, cursor: "pointer", padding: "4px 12px", borderRadius: "16px", background: "rgba(255,255,255,0.03)" }}>{c}</div>
+             ))}
+           </div>
+        </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: "13px", color: "#A1A1AA", marginBottom: "8px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>Architecture</label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div onClick={() => setTokenType("sac")} style={{ background: tokenType === "sac" ? "#F4F4F5" : "#09090B", border: `1px solid ${tokenType === "sac" ? "#F4F4F5" : "#3F3F46"}`, padding: "20px", borderRadius: "8px", cursor: "pointer", transition: "all 0.1s" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 600, color: tokenType === "sac" ? "#000" : "#fff", marginBottom: "4px" }}>Soroban Token</div>
-                  <div style={{ fontSize: "13px", color: tokenType === "sac" ? "#52525B" : "#A1A1AA" }}>Full programmability</div>
-                </div>
-                <div onClick={() => setTokenType("classic")} style={{ background: tokenType === "classic" ? "#F4F4F5" : "#09090B", border: `1px solid ${tokenType === "classic" ? "#F4F4F5" : "#3F3F46"}`, padding: "20px", borderRadius: "8px", cursor: "pointer", transition: "all 0.1s" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 600, color: tokenType === "classic" ? "#000" : "#fff", marginBottom: "4px" }}>Classic Asset</div>
-                  <div style={{ fontSize: "13px", color: tokenType === "classic" ? "#52525B" : "#A1A1AA" }}>Native performance</div>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <label style={{ display: "block", fontSize: "13px", color: "#A1A1AA", marginBottom: "12px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>Cross-Chain Mirroring</label>
-              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                {["Arbitrum", "Base", "Solana", "Near"].map(chain => {
-                  const isActive = chains.includes(chain);
-                  return (
-                    <div onClick={() => toggleChain(chain)} key={chain} style={{ padding: "8px 16px", background: isActive ? "#3B82F6" : "transparent", border: `1px solid ${isActive ? "#3B82F6" : "#3F3F46"}`, borderRadius: "4px", fontSize: "14px", fontWeight: 500, color: isActive ? "#fff" : "#A1A1AA", cursor: "pointer" }}>
-                      {chain}
+        {/* Table */}
+        <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", color: "#71717A", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "11px" }}>
+                <th style={{ padding: "16px", fontWeight: 600 }}>Token</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "center" }}>Updated</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>MarketCap</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Price</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>24h %</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "center" }}>Chart</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Swaps</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Holders</th>
+                <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Liquidity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((p, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.02)", transition: "background 0.2s" }} className="row-hover">
+                  <td style={{ padding: "16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      {p.metadata?.logo ? (
+                         <img src={p.metadata.logo} alt={p.symbol} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                      ) : (
+                         <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: "11px" }}>{p.symbol?.substring(0,3)}</div>
+                      )}
+                      <div>
+                        <div style={{ fontWeight: 600, color: "#fff", fontSize: "14px" }}>{p.name} <span style={{ color: "#71717A", fontWeight: 400 }}>/{p.symbol}</span></div>
+                        <div style={{ fontSize: "11px", color: "#A1A1AA", display: "flex", alignItems: "center", gap: "4px" }}>
+                           <span style={{ background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "4px" }}>{p.metadata?.category || "Token"}</span>
+                        </div>
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            
-            <button 
-              onClick={handleLaunch} 
-              disabled={isLaunching || !pubKey} 
-              style={{ 
-                background: isLaunching ? "#3F3F46" : !pubKey ? "#27272A" : "#F4F4F5", 
-                color: isLaunching || !pubKey ? "#A1A1AA" : "#000", 
-                padding: "16px", 
-                borderRadius: "6px", 
-                fontSize: "15px", 
-                fontWeight: 600, 
-                border: "none", 
-                cursor: isLaunching || !pubKey ? "not-allowed" : "pointer", 
-                marginTop: "16px",
-                transition: "all 0.2s"
-              }}
-            >
-              {!pubKey ? "Connect Wallet to Launch" : isLaunching ? "Deploying..." : "Deploy to Network"}
-            </button>
-            
-            {statusText && (
-              <div style={{ fontSize: "14px", color: "#10B981", textAlign: "center", fontWeight: 500, marginTop: "-8px" }}>
-                {statusText}
-              </div>
-            )}
-            
-            {launchResult && (
-              <div style={{ padding: "16px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", borderRadius: "6px", marginTop: "8px" }}>
-                <div style={{ fontSize: "14px", fontWeight: 500, color: "#10B981", marginBottom: "8px" }}>Deployment Successful</div>
-                <div style={{ fontSize: "13px", color: "#A1A1AA", marginBottom: "4px" }}>Asset: {launchResult.asset}</div>
-                <div style={{ fontSize: "13px", color: "#A1A1AA", fontFamily: "var(--font-geist-mono)", wordBreak: "break-all" }}>Issuer: {launchResult.issuer}</div>
-                <a href={`https://stellar.expert/explorer/testnet/account/${launchResult.issuer}`} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: "12px", color: "#3B82F6", fontSize: "13px", textDecoration: "none", fontWeight: 500 }}>
-                  View on Stellar Expert ↗
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Sidebar Info */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "32px" }}>
-            <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#fff", marginBottom: "24px" }}>Network Status</h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10B981" }}></div>
-                <div>
-                  <div style={{ color: "#F4F4F5", fontSize: "14px", fontWeight: 500 }}>Stellar Testnet</div>
-                  <div style={{ color: "#A1A1AA", fontSize: "13px", marginTop: "2px" }}>Operational</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3B82F6" }}></div>
-                <div>
-                  <div style={{ color: "#F4F4F5", fontSize: "14px", fontWeight: 500 }}>Soroban RPC</div>
-                  <div style={{ color: "#A1A1AA", fontSize: "13px", marginTop: "2px" }}>Synced</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "32px" }}>
-             <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#fff", marginBottom: "12px" }}>Social Booster</h3>
-             <p style={{ fontSize: "14px", color: "#A1A1AA", lineHeight: 1.6 }}>Assets deployed via LaunchZone are automatically indexed by Zing's Social Booster contracts, ready for community campaigns.</p>
-          </div>
+                  </td>
+                  <td style={{ padding: "16px", color: "#A1A1AA", textAlign: "center" }}>Just now</td>
+                  <td style={{ padding: "16px", color: "#fff", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>$10.00K</td>
+                  <td style={{ padding: "16px", color: "#fff", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>$0.0100</td>
+                  <td style={{ padding: "16px", fontWeight: 600, color: "#10B981", fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>+5.0%</td>
+                  <td style={{ padding: "16px", textAlign: "center" }}>
+                     <svg width="60" height="20" viewBox="0 0 60 20" fill="none">
+                       <path d="M0,15 Q10,20 20,10 T40,5 T60,0" stroke="#10B981" strokeWidth="1.5" />
+                     </svg>
+                  </td>
+                  <td style={{ padding: "16px", color: "#E4E4E7", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>12</td>
+                  <td style={{ padding: "16px", color: "#E4E4E7", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>3</td>
+                  <td style={{ padding: "16px", color: "#E4E4E7", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>$5.00K</td>
+                </tr>
+              ))}
+              {projects.length === 0 && (
+                <tr>
+                  <td colSpan={9} style={{ textAlign: "center", padding: "32px", color: "#A1A1AA" }}>No tokens launched yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+      <style dangerouslySetInnerHTML={{__html: `
+        .row-hover:hover { background-color: rgba(255,255,255,0.03) !important; cursor: pointer; }
+      `}} />
     </div>
   );
 }

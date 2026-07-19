@@ -1,12 +1,15 @@
 import React from "react";
 import Link from "next/link";
 import { PortfolioWidget } from "@/components/portfolio-widget";
-import { ClickableRow } from "@/components/clickable-row";
+import { QuestsWidget } from "@/components/quests-widget";
+import { SentimentPoll } from "@/components/sentiment-poll";
 import { supabase } from "@/lib/supabase";
+import { WebGLLiquid } from "@/components/ui/webgl-liquid";
 
 // -----------------------------------------------------------------------------
-// Data Fetching Helpers for LIVE Stellar Data
+// Data Fetching Helpers for LIVE Data
 // -----------------------------------------------------------------------------
+
 async function fetchStellarMarketData(baseAsset: string, baseIssuer: string) {
   try {
     const url = `https://horizon.stellar.org/trade_aggregations?base_asset_type=${baseAsset === 'XLM' ? 'native' : 'credit_alphanum4'}&base_asset_code=${baseAsset}&base_asset_issuer=${baseIssuer}&counter_asset_type=native&start_time=${Date.now() - 86400000}&end_time=${Date.now()}&resolution=86400000&limit=1`;
@@ -41,16 +44,49 @@ async function fetchFearAndGreed() {
 async function fetchProjects() {
   try {
     if (!supabase) return [];
-    const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false }).limit(4);
+    const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false }).limit(5);
     return data || [];
   } catch(e) {
     return [];
   }
 }
 
+async function fetchCoinloreGlobal() {
+  try {
+    const res = await fetch("https://api.coinlore.net/api/global/", { next: { revalidate: 300 } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data[0];
+  } catch (e) { return null; }
+}
+
+async function fetchCoinGeckoCategories() {
+  try {
+    const res = await fetch("https://api.coingecko.com/api/v3/coins/categories?order=market_cap_desc", { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) { return []; }
+}
+
+async function fetchCoinGeckoTrending() {
+  try {
+    const res = await fetch("https://api.coingecko.com/api/v3/search/trending", { next: { revalidate: 120 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.coins || [];
+  } catch (e) { return []; }
+}
+
 // -----------------------------------------------------------------------------
-// UI Helpers (Icons, Charts)
+// UI Helpers (Icons, Formats)
 // -----------------------------------------------------------------------------
+const formatMcap = (num: number) => {
+  if (num >= 1e12) return (num / 1e12).toFixed(2) + "T";
+  if (num >= 1e9) return (num / 1e9).toFixed(2) + "B";
+  if (num >= 1e6) return (num / 1e6).toFixed(2) + "M";
+  return num.toLocaleString();
+};
+
 const Icons = {
   USDC: () => (
     <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
@@ -72,6 +108,26 @@ const Icons = {
   )
 };
 
+const CircleGauge = ({ percentage, color, label }: { percentage: number, color: string, label: string }) => {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ position: "relative", width: "100px", height: "100px" }}>
+        <svg style={{ transform: "rotate(-90deg)" }} width="100" height="100">
+          <circle cx="50" cy="50" r={radius} stroke="#27272A" strokeWidth="8" fill="none" />
+          <circle cx="50" cy="50" r={radius} stroke={color} strokeWidth="8" fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} style={{ transition: "stroke-dashoffset 0.5s ease" }} />
+        </svg>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-geist-mono)" }}>
+          {percentage}%
+        </div>
+      </div>
+      <div style={{ color: "#71717A", fontSize: "11px", marginTop: "8px" }}>{label}</div>
+    </div>
+  );
+};
+
 // -----------------------------------------------------------------------------
 // Page Component
 // -----------------------------------------------------------------------------
@@ -79,185 +135,305 @@ export default async function DashboardPage() {
   const fng = await fetchFearAndGreed();
   const projects = await fetchProjects();
   
+  const btcData = await fetchStellarMarketData("BTC", "GATEMHCCKCY67ZUCKTROYN24ZYT5GK4EQZ65JJLDHKHRUZI3EUEKMTCH");
+  const usdcData = await fetchStellarMarketData("USDC", "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN");
+  const aquaData = await fetchStellarMarketData("AQUA", "GBNZILSTVQZ4R7IKQZGVKOU3TAWQQ23NDC3MVDQHMZKE4VBNRE9IJEAE");
+
+  const cgGlobal = await fetchCoinloreGlobal();
+  const cgCategories = await fetchCoinGeckoCategories();
+  const cgTrending = await fetchCoinGeckoTrending();
+
+  // Extract Global metrics
+  const btcDom = cgGlobal ? Math.round(parseFloat(cgGlobal.btc_d)) : 59;
+  const totalMcap = cgGlobal ? parseFloat(cgGlobal.total_mcap) : 2190000000000;
+  const globalMcapChange = cgGlobal ? parseFloat(cgGlobal.mcap_change) : 1.4;
+
+  const assets = cgTrending.slice(0, 5).map((coin: any) => {
+    const c = coin.item;
+    const rawPrice = c.data?.price || 0;
+    // Some CoinGecko endpoints return price as a number, some as a string like "$1.00"
+    let priceNum = 0;
+    if (typeof rawPrice === "number") {
+      priceNum = rawPrice;
+    } else if (typeof rawPrice === "string") {
+      priceNum = parseFloat(rawPrice.replace(/[^0-9.-]+/g,"")) || 0;
+    }
+    return {
+      n: c.symbol.toUpperCase(),
+      p: c.name,
+      thumb: c.thumb,
+      pr: priceNum,
+      ch: c.data?.price_change_percentage_24h?.usd || 0,
+      v: c.data?.total_volume || "$0",
+      l: c.data?.market_cap || "$0", 
+      m: c.data?.market_cap || "$0"
+    };
+  });
+
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 24px", fontFamily: "var(--font-geist-sans)" }}>
-      {/* 1. Top Highlight Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "24px", marginBottom: "24px" }}>
+    <div style={{ padding: "24px", fontFamily: "var(--font-geist-sans)", minHeight: "100%", display: "flex", flexDirection: "column", gap: "24px", position: "relative" }}>
+      
+      {/* 1. Promotional Banner Row */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+        {/* Banner 1 */}
+        <div className="banner-card" style={{ background: "linear-gradient(135deg, #0A1128, #0B1930)", border: "1px solid rgba(59,130,246,0.3)", borderRadius: "12px", padding: "16px", position: "relative", overflow: "hidden" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Zing</div>
+          <div style={{ fontSize: "13px", color: "#A1A1AA" }}>Season 2 is Live</div>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginTop: "16px", background: "rgba(59,130,246,0.1)", display: "inline-block", padding: "6px 12px", borderRadius: "16px" }}>
+            $1,000,000 Share Awaits!
+          </div>
+          <div style={{ position: "absolute", right: "-10px", top: "-10px", width: "80px", height: "80px", background: "radial-gradient(circle, rgba(59,130,246,0.4) 0%, transparent 70%)" }}></div>
+        </div>
         
-        {/* Primary Banner */}
-        <div style={{ background: "linear-gradient(135deg, #18181B 0%, #09090B 100%)", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.05)", padding: "32px", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-          <div>
-            <h2 style={{ fontSize: "24px", fontWeight: 700, color: "#fff", marginBottom: "8px", letterSpacing: "-0.5px" }}>Zing Season 1 is Live</h2>
-            <p style={{ color: "#A1A1AA", fontSize: "14px", maxWidth: "80%" }}>$1,000,000 Share Awaits!</p>
-          </div>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Link href="/competitions" style={{ background: "#F59E0B", color: "#000", padding: "6px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none" }}>LAUNCH</Link>
-          </div>
-          <Link href="/competitions" style={{ position: "absolute", bottom: "24px", right: "24px", width: "32px", height: "32px", borderRadius: "50%", background: "#27272A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </Link>
+        {/* Banner 2 */}
+        <div className="banner-card" style={{ background: "linear-gradient(135deg, #111827, #030712)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "16px", position: "relative", overflow: "hidden" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Zing</div>
+          <div style={{ fontSize: "13px", color: "#A1A1AA", marginBottom: "16px" }}>Explore Zing and Get</div>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: "#F59E0B" }}>Your $50 💸 Bonus Now!</div>
         </div>
 
-        {/* Secondary Banner */}
-        <div style={{ background: "#111113", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.05)", padding: "32px", position: "relative" }}>
+        {/* Banner 3 */}
+        <div className="banner-card" style={{ background: "linear-gradient(135deg, #1E1B4B, #0F172A)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "12px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>Stellar Network</h2>
-            <p style={{ color: "#A1A1AA", fontSize: "14px", lineHeight: 1.5, maxWidth: "85%" }}>Explore Stellar and Get Your $50 Bonus Now!</p>
+            <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Stellar</div>
+            <div style={{ fontSize: "13px", color: "#A1A1AA", lineHeight: "1.4" }}>Stellar LaunchZone<br/>is Live Now</div>
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
-            <Link href="/" style={{ background: "#3B82F6", color: "#fff", padding: "6px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none" }}>EXPLORE</Link>
-          </div>
-          <Link href="/" style={{ position: "absolute", bottom: "24px", right: "24px", width: "32px", height: "32px", borderRadius: "50%", background: "#27272A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </Link>
+          <div style={{ background: "#000", padding: "8px", borderRadius: "50%", border: "2px solid #fff" }}><Icons.XLM /></div>
         </div>
 
-        {/* Small Banner - Axelar */}
-        <div style={{ background: "linear-gradient(135deg, #18181B 0%, #09090B 100%)", borderRadius: "16px", border: "1px solid rgba(139, 92, 246, 0.15)", padding: "32px", position: "relative" }}>
+        {/* Banner 4 */}
+        <div className="banner-card" style={{ background: "linear-gradient(135deg, #451A03, #27272A)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "12px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>Cross-Chain via Axelar</h2>
-            <p style={{ color: "#A1A1AA", fontSize: "14px", lineHeight: 1.5, maxWidth: "80%" }}>Route liquidity effortlessly from 20+ chains.</p>
+             <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Core</div>
+            <div style={{ fontSize: "13px", color: "#A1A1AA", lineHeight: "1.4" }}>Explore Core<br/>Blockchain</div>
           </div>
-          <div style={{ position: "absolute", top: "24px", right: "24px" }}>
-            <span style={{ background: "#8B5CF6", color: "#fff", padding: "4px 8px", borderRadius: "4px", fontSize: "11px", fontWeight: 700 }}>NEW</span>
-          </div>
-          <Link href="/trade" style={{ position: "absolute", bottom: "24px", right: "24px", width: "32px", height: "32px", borderRadius: "50%", background: "#27272A", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", textDecoration: "none" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </Link>
+          <div style={{ fontSize: "28px" }}>🔶</div>
         </div>
       </div>
 
-      {/* 2. Middle Row: Trending, Portfolio, Markets */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+      {/* Main Grid: 3 Columns matching AIDA exactly */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "24px" }}>
         
-        {/* Top Trending */}
-        <div style={{ background: "#111113", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.05)", padding: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ color: "#F59E0B" }}>🔥</span> Top Trending
-            </h3>
-          </div>
-          
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", fontSize: "11px", color: "#71717A", fontWeight: 600, textTransform: "uppercase", marginBottom: "16px" }}>
-            <div>Asset</div>
-            <div style={{ textAlign: "right" }}>Price</div>
-            <div style={{ textAlign: "right" }}>24h</div>
-          </div>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {[
-              { n: "USDC", p: "$1.000", c: 0.01, icon: Icons.USDC },
-              { n: "BTC", p: "$92,430.5000", c: 1.25, icon: Icons.BTC },
-              { n: "AQUA", p: "$0.003", c: 19.61, icon: Icons.XLM }
-            ].map((t, i) => {
-              const Icon = t.icon;
-              return (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Icon />
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#F4F4F5" }}>{t.n}</span>
-                </div>
-                <div style={{ fontSize: "13px", color: "#F4F4F5", fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>{t.p}</div>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: t.c >= 0 ? "#10B981" : "#EF4444", textAlign: "right" }}>{t.c > 0 ? '+' : ''}{t.c}%</div>
+        {/* Column 1 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Top Trending */}
+          <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", overflow: "hidden", flex: 1 }}>
+            <div style={{ padding: "16px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff" }}>Top Trending</div>
+            </div>
+            <div style={{ padding: "12px 0" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "0 16px", marginBottom: "12px", fontSize: "11px", color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>
+                <div>Name</div>
+                <div style={{ textAlign: "right" }}>Price</div>
+                <div style={{ textAlign: "right" }}>24h Change</div>
               </div>
-            )})}
-          </div>
-        </div>
-
-        {/* User Portfolio */}
-        <PortfolioWidget />
-
-        {/* LaunchZone Overview */}
-        <div style={{ background: "#111113", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.05)", padding: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#fff", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ color: "#8B5CF6" }}>🚀</span> LaunchZone
-            </h3>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {projects.length > 0 ? projects.map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "12px", color: "#71717A", width: "12px" }}>{i + 1}</span>
-                <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "#fff" }}>
-                  {p.symbol?.[0]}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#F4F4F5" }}>{p.symbol}</div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div style={{ fontSize: "13px", color: "#A1A1AA", fontFamily: "var(--font-geist-mono)" }}>Supply: {p.supply >= 1000000 ? (p.supply/1000000).toFixed(1) + 'M' : p.supply}</div>
-                </div>
-              </div>
-            )) : (
-              <div style={{ fontSize: "13px", color: "#A1A1AA", textAlign: "center", marginTop: "24px" }}>No tokens launched yet.</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 3. Data Table */}
-      <div style={{ background: "#111113", borderRadius: "16px", border: "1px solid rgba(255, 255, 255, 0.05)", overflow: "hidden" }}>
-        
-        {/* Sub-nav tabs */}
-        <div style={{ display: "flex", gap: "32px", padding: "0 24px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", background: "#09090B" }}>
-          <Link href="/trade" style={{ textDecoration: "none", fontSize: "14px", fontWeight: 600, color: "#fff", borderBottom: "2px solid #3B82F6", padding: "20px 0", cursor: "pointer" }}>Spot</Link>
-          <div style={{ fontSize: "14px", fontWeight: 500, color: "#71717A", padding: "20px 0", cursor: "not-allowed" }}>Perps & Futures <span style={{ background: "#27272A", padding: "2px 6px", borderRadius: "4px", fontSize: "10px", marginLeft: "4px" }}>SOON</span></div>
-          <Link href="/launch" style={{ textDecoration: "none", fontSize: "14px", fontWeight: 500, color: "#71717A", padding: "20px 0", cursor: "pointer", transition: "color 0.2s" }} className="tab-hover">Launch Zone</Link>
-          <Link href="/dashboard" style={{ textDecoration: "none", fontSize: "14px", fontWeight: 500, color: "#71717A", padding: "20px 0", cursor: "pointer", transition: "color 0.2s" }} className="tab-hover">Social Booster</Link>
-        </div>
-
-        <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)", color: "#A1A1AA", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>Asset</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>Price</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>24h Change</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>24h Volume</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>Swaps</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>Liquidity</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>Market Cap</th>
-              <th style={{ padding: "20px 24px", fontWeight: 500 }}>Security</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              { n: "USDC", p: "USDC/XLM", icon: Icons.USDC, pr: 1.000, ch: 0.01, v: "$2.83M", s: "74,415", l: "$12.4M", m: "$30.33B" },
-              { n: "BTC", p: "BTC/XLM", icon: Icons.BTC, pr: 92430.50, ch: 1.25, v: "$1.20B", s: "45,120", l: "$450M", m: "$1.8T" },
-              { n: "AQUA", p: "AQUA/XLM", icon: Icons.XLM, pr: 0.0031, ch: 19.61, v: "$1.20M", s: "45,120", l: "$12.01K", m: "$5.12M" }
-            ].map((row, i) => {
-              const Icon = row.icon;
-              return (
-              <ClickableRow key={i} href={`/trade?asset=${row.n}`} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.02)", transition: "background 0.2s" }} className="table-row-hover">
-                <td style={{ padding: "20px 24px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
-                    <Icon />
-                    <div>
-                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>{row.n}</div>
-                      <div style={{ fontSize: "12px", color: "#71717A", fontWeight: 500 }}>{row.p}</div>
+              {cgTrending.slice(0, 5).map((coin: any, i: number) => {
+                const c = coin.item;
+                const change = c.data.price_change_percentage_24h?.usd || 0;
+                return (
+                  <Link href={`/trade?asset=${c.symbol}`} key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", alignItems: "center", padding: "10px 16px", transition: "background 0.2s", textDecoration: "none" }} className="row-hover">
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <img src={c.thumb} alt={c.symbol} style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
+                      <div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "#F4F4F5" }}>{c.symbol}</div>
+                        <div style={{ fontSize: "10px", color: "#71717A" }}>{c.name.substring(0,10)}</div>
+                      </div>
                     </div>
+                    <div style={{ fontSize: "13px", color: "#F4F4F5", fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>
+                      {c.data.price}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: change >= 0 ? "#10B981" : "#EF4444", textAlign: "right", fontFamily: "var(--font-geist-mono)" }}>
+                      {change > 0 ? '+' : ''}{change.toFixed(2)}%
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Column 2 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          <QuestsWidget />
+
+          {/* Total M.Cap */}
+          <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "20px" }}>
+            <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "8px" }}>Total M.Cap</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "12px", marginBottom: "16px" }}>
+              <div style={{ fontSize: "28px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-geist-mono)" }}>
+                ${formatMcap(totalMcap)}
+              </div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: globalMcapChange >= 0 ? "#10B981" : "#EF4444" }}>
+                {globalMcapChange > 0 ? '▲' : '▼'} {Math.abs(globalMcapChange).toFixed(1)}%
+              </div>
+            </div>
+            {/* Sparkline Mock representing chart */}
+            <svg viewBox="0 0 300 60" width="100%" height="60" style={{ opacity: 0.8 }}>
+              <path d="M0,40 Q20,50 40,30 T80,20 T120,35 T160,10 T200,25 T240,5 T300,15" fill="none" stroke="#10B981" strokeWidth="2" />
+              <path d="M0,40 Q20,50 40,30 T80,20 T120,35 T160,10 T200,25 T240,5 T300,15 L300,60 L0,60 Z" fill="url(#gradientGreen)" opacity="0.2" />
+              <defs>
+                <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          {/* Top Narrative */}
+          <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "16px", flex: 1 }}>
+             <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "16px", display: "flex", justifyContent: "space-between" }}>
+               <span>Top Narrative</span>
+               <span style={{ fontSize: "11px", color: "#71717A", fontWeight: 500, cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "12px" }}>View All</span>
+             </div>
+             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", marginBottom: "12px", fontSize: "11px", color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>
+                <div>Name</div>
+                <div style={{ textAlign: "right" }}>M.Cap</div>
+                <div style={{ textAlign: "right" }}>24h Change</div>
+             </div>
+             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+               {cgCategories.slice(0, 4).map((cat: any, i: number) => (
+                 <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", alignItems: "center" }}>
+                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                     <span style={{ fontSize: "12px", color: "#71717A" }}>{i + 1}</span>
+                     <span style={{ fontSize: "13px", fontWeight: 500, color: "#F4F4F5" }}>{cat.name.replace(' Ecosystem', '')}</span>
+                   </div>
+                   <div style={{ fontSize: "12px", color: "#A1A1AA", textAlign: "right", fontFamily: "var(--font-geist-mono)" }}>
+                     {formatMcap(cat.market_cap)}
+                   </div>
+                   <div style={{ fontSize: "12px", fontWeight: 600, color: cat.market_cap_change_24h >= 0 ? "#10B981" : "#EF4444", textAlign: "right" }}>
+                     {cat.market_cap_change_24h > 0 ? '+' : ''}{cat.market_cap_change_24h?.toFixed(2)}%
+                   </div>
+                 </div>
+               ))}
+             </div>
+          </div>
+        </div>
+
+        {/* Column 3 */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Market Trends (BTC Dom & Fear Greed) */}
+          <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "20px" }}>
+             <div style={{ fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "16px" }}>Market Trends</div>
+             <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "24px" }}>
+               <CircleGauge percentage={btcDom} color="#10B981" label="BTC vs Crypto Market" />
+               <CircleGauge percentage={fng} color={fng > 50 ? "#10B981" : (fng < 40 ? "#EF4444" : "#F59E0B")} label="Investors Sentiment" />
+             </div>
+             
+             {/* Community Sentiment */}
+             <SentimentPoll />
+          </div>
+
+          {/* LaunchZone Overview */}
+          <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", overflow: "hidden", flex: 1 }}>
+            <div style={{ padding: "16px", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "14px", fontWeight: 600, color: "#fff", display: "flex", justifyContent: "space-between" }}>
+              <span>LaunchZone</span>
+              <Link href="/launch/create" style={{ fontSize: "11px", color: "#71717A", fontWeight: 500, cursor: "pointer", border: "1px solid rgba(255,255,255,0.1)", padding: "2px 8px", borderRadius: "12px", textDecoration: "none" }}>Launch Now</Link>
+            </div>
+            <div style={{ padding: "12px 0" }}>
+               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", padding: "0 16px", marginBottom: "12px", fontSize: "11px", color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>
+                <div>Name</div>
+                <div style={{ textAlign: "right" }}>Target</div>
+                <div style={{ textAlign: "right" }}>Status</div>
+              </div>
+              {projects.length > 0 ? projects.map((p, i) => (
+                <Link href={`/launch/${p.id}`} key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", alignItems: "center", padding: "8px 16px", textDecoration: "none" }} className="row-hover">
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ fontSize: "12px", color: "#71717A", width: "12px" }}>{i + 1}</div>
+                    <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: "#fff" }}>
+                      {p.symbol?.[0]}
+                    </div>
+                    <div style={{ fontSize: "13px", fontWeight: 500, color: "#F4F4F5" }}>{p.symbol}</div>
                   </div>
-                </td>
-                <td style={{ padding: "20px 24px", fontSize: "14px", color: "#fff", fontWeight: 500, fontFamily: "var(--font-geist-mono)" }}>${row.pr.toLocaleString(undefined, { minimumFractionDigits: 3 })}</td>
-                <td style={{ padding: "20px 24px", fontSize: "14px", fontWeight: 600, color: row.ch >= 0 ? "#10B981" : "#EF4444" }}>{row.ch > 0 ? '+' : ''}{row.ch}%</td>
-                <td style={{ padding: "20px 24px", fontSize: "14px", color: "#E4E4E7", fontWeight: 500 }}>{row.v}</td>
-                <td style={{ padding: "20px 24px", fontSize: "14px", color: "#A1A1AA" }}>{row.s}</td>
-                <td style={{ padding: "20px 24px", fontSize: "14px", color: "#E4E4E7", fontWeight: 500 }}>{row.l}</td>
-                <td style={{ padding: "20px 24px", fontSize: "14px", color: "#A1A1AA" }}>{row.m}</td>
-                <td style={{ padding: "20px 24px" }}>
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(16, 185, 129, 0.1)", color: "#10B981", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: 600 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                    Audited
+                  <div style={{ fontSize: "12px", color: "#A1A1AA", fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>{p.target_amount} XLM</div>
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ fontSize: "9px", color: "#10B981", fontWeight: 700 }}>LIVE</span>
                   </div>
-                </td>
-              </ClickableRow>
-            )})}
-          </tbody>
-        </table>
+                </Link>
+              )) : (
+                <div style={{ fontSize: "12px", color: "#A1A1AA", textAlign: "center", padding: "16px" }}>No active launches</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Spot Market Table at bottom */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          <PortfolioWidget />
+
+          {/* Data Table */}
+          <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", flex: 1, display: "flex", flexDirection: "column" }}>
+            
+            <div style={{ display: "flex", gap: "24px", padding: "0 16px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#fff", borderBottom: "2px solid #3B82F6", padding: "16px 0", cursor: "pointer" }}>Spot</div>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "#71717A", padding: "16px 0", cursor: "not-allowed" }}>Perps & Futures</div>
+              <div style={{ fontSize: "13px", fontWeight: 500, color: "#71717A", padding: "16px 0", cursor: "pointer" }} className="tab-hover">Prediction Markets</div>
+            </div>
+
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "13px" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", color: "#71717A", textTransform: "uppercase", letterSpacing: "0.05em", fontSize: "11px" }}>
+                  <th style={{ padding: "16px", fontWeight: 600 }}>Asset</th>
+                  <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Price</th>
+                  <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>24h Change</th>
+                  <th style={{ padding: "16px", fontWeight: 600, textAlign: "center" }}>24h Chart</th>
+                  <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Volume</th>
+                  <th style={{ padding: "16px", fontWeight: 600, textAlign: "right" }}>Liquidity</th>
+                  <th style={{ padding: "16px", fontWeight: 600, textAlign: "center" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {assets.map((row, i) => {
+                  const Icon = row.icon;
+                  return (
+                  <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.02)", transition: "background 0.2s" }} className="row-hover">
+                    <td style={{ padding: "16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#27272A" }}>
+                           {row.thumb ? <img src={row.thumb} alt={row.n} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: "#fff" }}>{row.n}</div>
+                          <div style={{ fontSize: "11px", color: "#71717A" }}>{row.p}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: "16px", color: "#fff", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>
+                      ${row.pr.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                    </td>
+                    <td style={{ padding: "16px", fontWeight: 600, color: row.ch >= 0 ? "#10B981" : "#EF4444", fontFamily: "var(--font-geist-mono)", textAlign: "right" }}>
+                      {row.ch > 0 ? '+' : ''}{row.ch.toFixed(2)}%
+                    </td>
+                    <td style={{ padding: "16px", textAlign: "center" }}>
+                       <svg width="80" height="24" viewBox="0 0 80 24" fill="none">
+                         <path d={row.ch >= 0 ? "M0,20 Q10,24 20,16 T40,12 T60,8 T80,4" : "M0,4 Q10,8 20,12 T40,16 T60,20 T80,24"} stroke={row.ch >= 0 ? "#10B981" : "#EF4444"} strokeWidth="1.5" />
+                       </svg>
+                    </td>
+                    <td style={{ padding: "16px", color: "#E4E4E7", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right", fontSize: "11px" }}>{row.v}</td>
+                    <td style={{ padding: "16px", color: "#E4E4E7", fontWeight: 500, fontFamily: "var(--font-geist-mono)", textAlign: "right", fontSize: "11px" }}>{row.l}</td>
+                    <td style={{ padding: "16px", textAlign: "center" }}>
+                       <Link href={`/trade?asset=${row.n}`} style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3B82F6", padding: "6px 16px", borderRadius: "6px", fontSize: "12px", fontWeight: 700, textDecoration: "none" }} className="flash-buy-btn">
+                         TRADE
+                       </Link>
+                    </td>
+                  </tr>
+                )})}
+              </tbody>
+            </table>
+          </div>
+
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
-        .table-row-hover:hover { background-color: rgba(255, 255, 255, 0.03); cursor: pointer; }
+        .row-hover:hover { background-color: rgba(255,255,255,0.03) !important; cursor: pointer; }
         .tab-hover:hover { color: #fff !important; }
+        .flash-buy-btn:hover { background: #3B82F6 !important; color: #fff !important; }
+        .sentiment-btn:hover { background: rgba(255,255,255,0.05) !important; }
+        .banner-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .banner-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 10px 30px -10px rgba(59,130,246,0.3); border-color: rgba(255,255,255,0.2) !important; }
       `}} />
     </div>
   );

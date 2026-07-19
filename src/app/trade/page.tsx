@@ -3,7 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useWallet } from "@/components/wallet-provider";
+import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/toast-provider";
+import { TradingChart } from "@/components/trading-chart";
+import { supabase } from "@/lib/supabase";
 import { Asset, Networks } from "@stellar/stellar-sdk";
 import { getBalances, getSwapQuote, buildSwapTx, buildLiquidityPoolTx, TokenBalance } from "@/lib/stellar-trade";
 import { submitTx } from "@/lib/stellar-launch";
@@ -13,9 +16,21 @@ const COMMON_ASSETS = [
   { code: "USDC", issuer: "GC3G7RAERYP3CDDVLIN4SJVCCQDJ6ZSY6X3AHP262XDMMBLSSG75LI66", type: "credit_alphanum4" } // Testnet USDC Dummy
 ];
 
+import { useSearchParams } from "next/navigation";
+
 export default function TradePage() {
+  return (
+    <React.Suspense fallback={<div style={{ padding: "48px", color: "#fff", textAlign: "center" }}>Loading Terminal...</div>}>
+      <TradeContent />
+    </React.Suspense>
+  );
+}
+
+function TradeContent() {
   const { pubKey, signTransaction } = useWallet();
+  const { user } = useAuth();
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
 
   const [balances, setBalances] = useState<TokenBalance[]>([]);
   const [payAmount, setPayAmount] = useState("");
@@ -34,6 +49,24 @@ export default function TradePage() {
   const [quoteError, setQuoteError] = useState("");
   const [txHash, setTxHash] = useState("");
 
+  const isViewOnly = recvAssetIssuer === "VIEW_ONLY";
+
+  // Parse ?asset= from URL on load
+  useEffect(() => {
+    const assetQuery = searchParams?.get("asset");
+    if (assetQuery) {
+      const code = assetQuery.toUpperCase();
+      const existing = COMMON_ASSETS.find(a => a.code === code);
+      if (existing) {
+        setRecvAssetCode(existing.code);
+        setRecvAssetIssuer(existing.issuer);
+      } else {
+        setRecvAssetCode(code);
+        setRecvAssetIssuer("VIEW_ONLY");
+      }
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (pubKey) {
       getBalances(pubKey).then(setBalances);
@@ -43,7 +76,7 @@ export default function TradePage() {
   useEffect(() => {
     const fetchQuote = async () => {
       setQuoteError("");
-      if (!payAmount || parseFloat(payAmount) <= 0) {
+      if (!payAmount || parseFloat(payAmount) <= 0 || isViewOnly) {
         setReceiveAmount("");
         setQuotePath([]);
         return;
@@ -60,7 +93,6 @@ export default function TradePage() {
         const quote = await getSwapQuote(pAsset, payAmount, rAsset);
         setReceiveAmount(quote.destination_amount);
         
-        // Map the path for the transaction builder
         const path = quote.path.map((p: any) => 
           p.asset_type === "native" ? Asset.native() : new Asset(p.asset_code, p.asset_issuer)
         );
@@ -69,7 +101,6 @@ export default function TradePage() {
         setReceiveAmount("");
         setQuotePath([]);
         setQuoteError(e.message || "Failed to fetch quote");
-        console.error("Quote error:", e);
       } finally {
         setIsQuoting(false);
       }
@@ -77,20 +108,21 @@ export default function TradePage() {
 
     const debounce = setTimeout(fetchQuote, 600);
     return () => clearTimeout(debounce);
-  }, [payAmount, payAssetCode, payAssetIssuer, recvAssetCode, recvAssetIssuer]);
+  }, [payAmount, payAssetCode, payAssetIssuer, recvAssetCode, recvAssetIssuer, isViewOnly]);
 
   const handleSwap = async () => {
     if (!pubKey) return showToast("Connect wallet first", "error");
+    if (isViewOnly) return showToast("This asset is not tradeable on Testnet", "error");
+    
     try {
       setTxHash("");
       setIsSwapping(true);
       const pAsset = payAssetCode === "XLM" ? Asset.native() : new Asset(payAssetCode, payAssetIssuer);
       const rAsset = recvAssetCode === "XLM" ? Asset.native() : new Asset(recvAssetCode, recvAssetIssuer);
       
-      // Calculate minAmountOut based on a 1% slippage tolerance
       let minAmountOut = (parseFloat(receiveAmount) * 0.99).toFixed(7);
       if (parseFloat(minAmountOut) <= 0) {
-        minAmountOut = "0.0000001"; // Stellar requires a strictly positive number
+        minAmountOut = "0.0000001"; 
       }
 
       showToast("Waiting for signature...", "info");
@@ -101,6 +133,12 @@ export default function TradePage() {
       const res = await submitTx(signedXdr);
       setTxHash(res.hash);
       
+      if (user) {
+        await supabase.from('user_quests')
+          .update({ first_trade_made: true })
+          .eq('user_id', user.id);
+      }
+
       showToast("Swap successful!", "success");
       setPayAmount("");
       setReceiveAmount("");
@@ -118,8 +156,8 @@ export default function TradePage() {
       if (b.asset_type !== "native") {
         if (!assets.find(a => a.code === b.asset_code && a.issuer === b.asset_issuer)) {
           assets.push({
-            code: b.asset_code,
-            issuer: b.asset_issuer!,
+            code: b.asset_code || "UNKNOWN",
+            issuer: b.asset_issuer || "",
             type: b.asset_type
           });
         }
@@ -129,6 +167,7 @@ export default function TradePage() {
   }, [balances]);
 
   const getBalanceFor = (code: string, issuer: string) => {
+    if (issuer === "VIEW_ONLY") return "0.00";
     const bal = balances.find(b => 
       (b.asset_code === code && b.asset_issuer === issuer) || 
       (code === "XLM" && b.asset_type === "native")
@@ -137,8 +176,8 @@ export default function TradePage() {
   };
 
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "48px 24px", fontFamily: "var(--font-geist-sans)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px" }}>
+    <div style={{ width: "100%", maxWidth: "1200px", margin: "0 auto", padding: "48px 24px", fontFamily: "var(--font-geist-sans)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px", width: "100%" }}>
         <div>
           <h1 style={{ fontSize: "32px", fontWeight: 600, color: "#fff", marginBottom: "8px", letterSpacing: "-0.5px" }}>
             Terminal
@@ -150,17 +189,21 @@ export default function TradePage() {
         </Link>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "40px", alignItems: "start" }}>
-        {/* Left Column: Chart Area (simplified for real view) */}
-        <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "40px", minHeight: "400px", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-          <h2 style={{ fontSize: "18px", fontWeight: 600, color: "#fff", marginBottom: "8px" }}>Live Market Data</h2>
-          <p style={{ color: "#A1A1AA", fontSize: "14px", textAlign: "center", maxWidth: "300px" }}>
-            The terminal is now connected directly to the Stellar Horizon API. Quotes are fetched in real-time from the on-chain order books.
-          </p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: "40px", alignItems: "start", width: "100%" }}>
+        {/* Left Column: Chart Area */}
+        <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid #27272A", padding: "24px", minHeight: "400px", display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
+             <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#fff" }}>
+               {payAssetCode}/{recvAssetCode}
+             </h2>
+             <span style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10B981", padding: "4px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: 600 }}>Live Data</span>
+          </div>
+          
+          <TradingChart symbol={`${recvAssetCode}`} />
         </div>
 
         {/* Right Column: Swap Interface */}
-        <div style={{ background: "#111113", borderRadius: "12px", border: "1px solid #27272A", padding: "24px", display: "flex", flexDirection: "column" }}>
+        <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid #27272A", padding: "24px", display: "flex", flexDirection: "column" }}>
           
           <div style={{ display: "flex", gap: "16px", marginBottom: "24px", borderBottom: "1px solid #27272A", paddingBottom: "16px" }}>
             <div style={{ flex: 1, padding: "8px", color: "#fff", fontWeight: 600, textAlign: "center", borderBottom: "2px solid #F4F4F5", cursor: "pointer" }}>Swap</div>
@@ -169,13 +212,13 @@ export default function TradePage() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {/* Pay Input */}
-            <div style={{ background: "#09090B", borderRadius: "8px", padding: "16px", border: "1px solid #3F3F46" }}>
+            <div style={{ background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)", borderRadius: "8px", padding: "16px", border: "1px solid #3F3F46", opacity: isViewOnly ? 0.5 : 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
                 <span style={{ color: "#A1A1AA", fontSize: "13px", fontWeight: 500, textTransform: "uppercase" }}>Pay</span>
                 <span style={{ color: "#A1A1AA", fontSize: "13px" }}>Bal: {getBalanceFor(payAssetCode, payAssetIssuer)}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} placeholder="0.0" style={{ flex: 1, background: "transparent", border: "none", fontSize: "24px", color: "#fff", outline: "none", width: "100%" }} />
+                <input type="number" value={payAmount} onChange={e => setPayAmount(e.target.value)} disabled={isViewOnly} placeholder="0.0" style={{ flex: 1, background: "transparent", border: "none", fontSize: "24px", color: "#fff", outline: "none", width: "100%" }} />
                 
                 <select 
                   value={payAssetCode === "CUSTOM" ? "CUSTOM" : `${payAssetCode}:${payAssetIssuer}`} 
@@ -189,8 +232,9 @@ export default function TradePage() {
                       setPayAssetCode(code);
                       setPayAssetIssuer(issuer);
                     }
-                  }} 
-                  style={{ background: "#27272A", color: "#fff", border: "none", padding: "8px 12px", borderRadius: "6px", fontSize: "14px", fontWeight: 600, outline: "none", cursor: "pointer", maxWidth: "120px" }}
+                  }}
+                  disabled={isViewOnly}
+                  style={{ background: "#27272A", color: "#fff", border: "none", padding: "8px 12px", borderRadius: "6px", fontSize: "14px", fontWeight: 600, outline: "none", cursor: isViewOnly ? "not-allowed" : "pointer", maxWidth: "120px" }}
                 >
                   {selectableAssets.map((a, idx) => (
                     <option key={`pay-${idx}`} value={`${a.code}:${a.issuer}`}>
@@ -200,30 +244,32 @@ export default function TradePage() {
                   <option value="CUSTOM">Custom...</option>
                 </select>
               </div>
-              {payAssetCode === "CUSTOM" && (
+              {payAssetCode === "CUSTOM" && !isViewOnly && (
                 <div style={{ marginTop: "12px" }}>
-                  <input type="text" placeholder="Custom Asset Code" onChange={e => setPayAssetCode(e.target.value.toUpperCase())} style={{ width: "100%", background: "#111113", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px", marginBottom: "8px" }} />
-                  <input type="text" placeholder="Issuer Public Key" value={payAssetIssuer} onChange={e => setPayAssetIssuer(e.target.value)} style={{ width: "100%", background: "#111113", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px" }} />
+                  <input type="text" placeholder="Custom Asset Code" onChange={e => setPayAssetCode(e.target.value.toUpperCase())} style={{ width: "100%", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px", marginBottom: "8px" }} />
+                  <input type="text" placeholder="Issuer Public Key" value={payAssetIssuer} onChange={e => setPayAssetIssuer(e.target.value)} style={{ width: "100%", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px" }} />
                 </div>
               )}
             </div>
 
             {/* Receive Input */}
-            <div style={{ background: "#09090B", borderRadius: "8px", padding: "16px", border: "1px solid #3F3F46" }}>
+            <div style={{ background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)", borderRadius: "8px", padding: "16px", border: "1px solid #3F3F46" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
                 <span style={{ color: "#A1A1AA", fontSize: "13px", fontWeight: 500, textTransform: "uppercase" }}>Receive {isQuoting && "(Fetching...)"}</span>
                 <span style={{ color: "#A1A1AA", fontSize: "13px" }}>Bal: {getBalanceFor(recvAssetCode, recvAssetIssuer)}</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <input type="text" value={receiveAmount} readOnly placeholder="0.0" style={{ flex: 1, background: "transparent", border: "none", fontSize: "24px", color: isQuoting ? "#71717A" : "#fff", outline: "none", width: "100%" }} />
+                <input type="text" value={isViewOnly ? "---" : receiveAmount} readOnly placeholder="0.0" style={{ flex: 1, background: "transparent", border: "none", fontSize: "24px", color: (isQuoting || isViewOnly) ? "#71717A" : "#fff", outline: "none", width: "100%" }} />
                 
                 <select 
-                  value={recvAssetCode === "CUSTOM" ? "CUSTOM" : `${recvAssetCode}:${recvAssetIssuer}`} 
+                  value={isViewOnly ? "VIEW_ONLY" : recvAssetCode === "CUSTOM" ? "CUSTOM" : `${recvAssetCode}:${recvAssetIssuer}`} 
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val === "CUSTOM") {
                       setRecvAssetCode("CUSTOM");
                       setRecvAssetIssuer("");
+                    } else if (val === "VIEW_ONLY") {
+                      // Do nothing, handled by effect
                     } else {
                       const [code, issuer] = val.split(":");
                       setRecvAssetCode(code);
@@ -232,36 +278,43 @@ export default function TradePage() {
                   }} 
                   style={{ background: "#27272A", color: "#fff", border: "none", padding: "8px 12px", borderRadius: "6px", fontSize: "14px", fontWeight: 600, outline: "none", cursor: "pointer", maxWidth: "120px" }}
                 >
+                  {isViewOnly && <option value="VIEW_ONLY">{recvAssetCode}</option>}
                   {selectableAssets.map((a, idx) => (
                     <option key={`recv-${idx}`} value={`${a.code}:${a.issuer}`}>
                       {a.code}
                     </option>
                   ))}
-                  <option value="CUSTOM">Custom...</option>
+                  {!isViewOnly && <option value="CUSTOM">Custom...</option>}
                 </select>
               </div>
-              {recvAssetCode === "CUSTOM" && (
+              {recvAssetCode === "CUSTOM" && !isViewOnly && (
                 <div style={{ marginTop: "12px" }}>
-                  <input type="text" placeholder="Custom Asset Code" onChange={e => setRecvAssetCode(e.target.value.toUpperCase())} style={{ width: "100%", background: "#111113", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px", marginBottom: "8px" }} />
-                  <input type="text" placeholder="Issuer Public Key" value={recvAssetIssuer} onChange={e => setRecvAssetIssuer(e.target.value)} style={{ width: "100%", background: "#111113", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px" }} />
+                  <input type="text" placeholder="Custom Asset Code" onChange={e => setRecvAssetCode(e.target.value.toUpperCase())} style={{ width: "100%", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px", marginBottom: "8px" }} />
+                  <input type="text" placeholder="Issuer Public Key" value={recvAssetIssuer} onChange={e => setRecvAssetIssuer(e.target.value)} style={{ width: "100%", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", border: "1px solid #3F3F46", padding: "8px", borderRadius: "4px", color: "#fff", fontSize: "13px" }} />
                 </div>
               )}
             </div>
 
-            {receiveAmount && !isQuoting && !quoteError && (
+            {receiveAmount && !isQuoting && !quoteError && !isViewOnly && (
               <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px", marginTop: "4px" }}>
                 <span style={{ color: "#71717A", fontSize: "12px" }}>Max Slippage</span>
                 <span style={{ color: "#A1A1AA", fontSize: "12px" }}>1.00%</span>
               </div>
             )}
             
-            {quoteError && (
+            {quoteError && !isViewOnly && (
               <div style={{ color: "#EF4444", fontSize: "13px", padding: "0 8px", marginTop: "4px" }}>
                 ⚠️ {quoteError}
               </div>
             )}
 
-            {quoteError === "No liquidity path found for this swap." && (
+            {isViewOnly && (
+              <div style={{ color: "#F59E0B", fontSize: "13px", padding: "0 8px", marginTop: "4px" }}>
+                ⚠️ This asset is in View-Only mode and cannot be traded on the Stellar Testnet.
+              </div>
+            )}
+
+            {quoteError === "No liquidity path found for this swap." && !isViewOnly && (
               <button 
                 onClick={async () => {
                   if (!pubKey) return showToast("Connect wallet first", "error");
@@ -276,7 +329,6 @@ export default function TradePage() {
                     if (maxDepositB === 0) {
                       throw new Error(`You don't hold any ${rAsset.code} to seed the pool!`);
                     }
-                    // Deposit either 1000 or 50% of their balance if they hold less than 1000
                     const depositB = Math.min(1000, maxDepositB * 0.5).toFixed(7);
                     
                     const xdr = await buildLiquidityPoolTx(pubKey, pAsset, rAsset, "100", depositB);
@@ -310,20 +362,20 @@ export default function TradePage() {
 
           <button 
             onClick={handleSwap} 
-            disabled={isSwapping || !pubKey || !receiveAmount || isQuoting || !!quoteError}
+            disabled={isSwapping || !pubKey || isViewOnly || (!receiveAmount && !isViewOnly) || isQuoting || (!!quoteError && !isViewOnly)}
             style={{ 
-              background: isSwapping || !pubKey || !receiveAmount || !!quoteError ? "#3F3F46" : "#F4F4F5", 
-              color: isSwapping || !pubKey || !receiveAmount || !!quoteError ? "#A1A1AA" : "#000", 
+              background: isSwapping || !pubKey || isViewOnly || (!receiveAmount && !isViewOnly) || (!!quoteError && !isViewOnly) ? "#3F3F46" : "#F4F4F5", 
+              color: isSwapping || !pubKey || isViewOnly || (!receiveAmount && !isViewOnly) || (!!quoteError && !isViewOnly) ? "#A1A1AA" : "#000", 
               padding: "16px", 
               borderRadius: "6px", 
               fontSize: "15px", 
               fontWeight: 600, 
               border: "none", 
-              cursor: isSwapping || !pubKey || !receiveAmount || !!quoteError ? "not-allowed" : "pointer", 
+              cursor: isSwapping || !pubKey || isViewOnly || (!receiveAmount && !isViewOnly) || (!!quoteError && !isViewOnly) ? "not-allowed" : "pointer", 
               marginTop: "24px", 
               transition: "all 0.2s" 
             }}>
-            {!pubKey ? "Connect Wallet" : isSwapping ? "Swapping..." : quoteError ? "No Liquidity" : receiveAmount ? "Submit Trade" : "Enter Amount"}
+            {!pubKey ? "Connect Wallet" : isViewOnly ? "Testnet Trade Not Supported" : isSwapping ? "Swapping..." : quoteError ? "No Liquidity" : receiveAmount ? "Submit Trade" : "Enter Amount"}
           </button>
           
           {txHash && (
