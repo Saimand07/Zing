@@ -9,7 +9,7 @@
 [![Launchpad](https://img.shields.io/badge/Launchpad-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT)
 [![Campaigns](https://img.shields.io/badge/Campaigns-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z)
 [![Competitions](https://img.shields.io/badge/Competitions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW)
-[![Predictions](https://img.shields.io/badge/Predictions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAWPDWLWKW7VZ3R7LQGMQAWDBAB3UPTRAGJPH7YYPCKBVYQXVA7GPIFJ)
+[![Predictions](https://img.shields.io/badge/Predictions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAIXW66XSG75SQMWYMDAUIKTYOWW7GCG4D3V5UVBUP5FV4WEFYLCOA4I)
 
 Zing is a **Stellar-first, chain-abstracted execution layer** architected to reproduce the institutional trading terminal experience for retail users. Connect a Stellar wallet, fund via Friendbot, and instantly access unified trading, token launches, social campaigns, and trading competitions. Zing treats Stellar as the ultimate settlement layer while seamlessly routing cross-chain liquidity via NEAR Intents, Axelar, and Circle CCTP.
 
@@ -67,7 +67,7 @@ By utilizing Stellar's near-zero fee, high-throughput ledger and Soroban's rust-
 | **Zing Launchpad** | `CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT) |
 | **Social Booster (Campaigns)** | `CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z) |
 | **Trading Competitions** | `CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW) |
-| **Prediction Markets** | `CAWPDWLWKW7VZ3R7LQGMQAWDBAB3UPTRAGJPH7YYPCKBVYQXVA7GPIFJ` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAWPDWLWKW7VZ3R7LQGMQAWDBAB3UPTRAGJPH7YYPCKBVYQXVA7GPIFJ) |
+| **Prediction Markets** | `CAIXW66XSG75SQMWYMDAUIKTYOWW7GCG4D3V5UVBUP5FV4WEFYLCOA4I` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAIXW66XSG75SQMWYMDAUIKTYOWW7GCG4D3V5UVBUP5FV4WEFYLCOA4I) |
 
 ---
 
