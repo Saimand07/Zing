@@ -6,10 +6,10 @@
 [![Status](https://img.shields.io/badge/Status-Phase%201%20Live-brightgreen)]()
 
 [![Smart Wallet](https://img.shields.io/badge/Smart%20Wallet-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAMVCRCMROO524FBV6IJYPB6BIOR2OR7DVCRMLQJ5QZB2JDOP6GMIO2X)
-[![Launchpad](https://img.shields.io/badge/Launchpad-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT)
-[![Campaigns](https://img.shields.io/badge/Campaigns-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z)
-[![Competitions](https://img.shields.io/badge/Competitions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW)
-[![Predictions](https://img.shields.io/badge/Predictions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAIXW66XSG75SQMWYMDAUIKTYOWW7GCG4D3V5UVBUP5FV4WEFYLCOA4I)
+[![Launchpad](https://img.shields.io/badge/Launchpad-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CBTKEHDZLL5ICZFFHF7SKNJUAO6H2D337T2ROVOJUPFP3KT2MQGO7VTJ)
+[![Campaigns](https://img.shields.io/badge/Campaigns-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CBDNXFONMLWTIQLSFONXDDTBIPWZ7LRV7BLAMYEA4K37IAETH424IOWC)
+[![Competitions](https://img.shields.io/badge/Competitions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CAHXXMYINOBWAAYBHETS6C5NKX4S4F4OHWV7EFLX6PY7QB3RCSQMQO2T)
+[![Predictions](https://img.shields.io/badge/Predictions-Contract-purple)](https://stellar.expert/explorer/testnet/contract/CBY4WYAVM5ZGQYMJDMSJBRZDBWOELJAFM25IWCM2QJL6N6TYRI7W3N3I)
 
 Zing is a **Stellar-first, chain-abstracted execution layer** architected to reproduce the institutional trading terminal experience for retail users. Connect a Stellar wallet, fund via Friendbot, and instantly access unified trading, token launches, social campaigns, and trading competitions. Zing treats Stellar as the ultimate settlement layer while seamlessly routing cross-chain liquidity via NEAR Intents, Axelar, and Circle CCTP.
 
@@ -64,10 +64,10 @@ By utilizing Stellar's near-zero fee, high-throughput ledger and Soroban's rust-
 | Contract Module | Contract ID | Explorer Link |
 | --- | --- | --- |
 | **Smart Wallet & Routing** | `CAMVCRCMROO524FBV6IJYPB6BIOR2OR7DVCRMLQJ5QZB2JDOP6GMIO2X` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAMVCRCMROO524FBV6IJYPB6BIOR2OR7DVCRMLQJ5QZB2JDOP6GMIO2X) |
-| **Zing Launchpad** | `CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBNXIBGWMCGTL7BEJS55DJTQJVFOQXQ35EIOASOLSHHNB2ZS66DCGTYT) |
-| **Social Booster (Campaigns)** | `CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDW64YNEY5UECCBZYR74U7OMGRNQD7WTJ32BMROLGENWOOVZA2YO5E3Z) |
-| **Trading Competitions** | `CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAEYIELQNL7DOWONZRKHTEACYCTSYD76CQ5BUNCJABYFEINVWPB7A6WW) |
-| **Prediction Markets** | `CAIXW66XSG75SQMWYMDAUIKTYOWW7GCG4D3V5UVBUP5FV4WEFYLCOA4I` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAIXW66XSG75SQMWYMDAUIKTYOWW7GCG4D3V5UVBUP5FV4WEFYLCOA4I) |
+| **Zing Launchpad** | `CBTKEHDZLL5ICZFFHF7SKNJUAO6H2D337T2ROVOJUPFP3KT2MQGO7VTJ` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBTKEHDZLL5ICZFFHF7SKNJUAO6H2D337T2ROVOJUPFP3KT2MQGO7VTJ) |
+| **Social Booster (Campaigns)** | `CBDNXFONMLWTIQLSFONXDDTBIPWZ7LRV7BLAMYEA4K37IAETH424IOWC` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBDNXFONMLWTIQLSFONXDDTBIPWZ7LRV7BLAMYEA4K37IAETH424IOWC) |
+| **Trading Competitions** | `CAHXXMYINOBWAAYBHETS6C5NKX4S4F4OHWV7EFLX6PY7QB3RCSQMQO2T` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CAHXXMYINOBWAAYBHETS6C5NKX4S4F4OHWV7EFLX6PY7QB3RCSQMQO2T) |
+| **Prediction Markets** | `CBY4WYAVM5ZGQYMJDMSJBRZDBWOELJAFM25IWCM2QJL6N6TYRI7W3N3I` | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBY4WYAVM5ZGQYMJDMSJBRZDBWOELJAFM25IWCM2QJL6N6TYRI7W3N3I) |
 
 ---
 
