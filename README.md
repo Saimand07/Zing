@@ -7,6 +7,7 @@
 Trade with Zero Gas · Predict On-Chain · Launch Tokens · Built on Stellar Testnet
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Zing%20App-6366f1?style=flat-square)](https://github.com/Saimand07/Zing)
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-YouTube-ff0000?style=flat-square&logo=youtube)](https://youtu.be/Gs5oL4_rzvw)
 [![Network](https://img.shields.io/badge/Network-Stellar%20Testnet-0ea5e9?style=flat-square)](https://stellar.org)
 [![Soroban](https://img.shields.io/badge/Contracts-Soroban-8b5cf6?style=flat-square)](https://soroban.stellar.org)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016-black?style=flat-square)](https://nextjs.org)
@@ -146,6 +147,7 @@ Zing/
 | Resource | Details |
 |----------|---------|
 | **GitHub Repository** | [github.com/Saimand07/Zing](https://github.com/Saimand07/Zing) |
+| **Demo Video** | [Watch on YouTube](https://youtu.be/Gs5oL4_rzvw) |
 | **Network** | Stellar Testnet |
 | **Soroban RPC** | `https://soroban-testnet.stellar.org` |
 | **Horizon API** | `https://horizon-testnet.stellar.org` |
