@@ -201,6 +201,76 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── DeFi 2.0 Intents Architecture ── */}
+      <section style={{ padding: "120px 24px", position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "80px" }}>
+            <h2 style={{ fontSize: "3rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>DeFi 2.0: The Intent Engine</h2>
+            <p style={{ color: "#A1A1AA", fontSize: "1.2rem", maxWidth: "700px", margin: "0 auto" }}>
+              Stop worrying about slippage, MEV attacks, and gas fees. Zing's Soroban architecture lets you simply declare what you want, and an off-chain network of solvers competes to give you the best price.
+            </p>
+          </div>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+            {[
+              { title: "1. Sign Intent", desc: "User cryptographically signs their desired outcome (e.g. 'I want 100 USDC for my 500 XLM'). No gas required.", icon: "✍️" },
+              { title: "2. Solvers Compete", desc: "Institutional market makers compete in a decentralized Dutch Auction to fill your intent at the best price.", icon: "⚡" },
+              { title: "3. Atomic Settlement", desc: "The winning solver submits the transaction to the Stellar network, paying all gas fees on your behalf.", icon: "⛓️" }
+            ].map((step, i) => (
+              <div key={i} className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
+                <div style={{ fontSize: "3rem", marginBottom: "24px" }}>{step.icon}</div>
+                <h3 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "16px" }}>{step.title}</h3>
+                <p style={{ color: "#A1A1AA", lineHeight: 1.6 }}>{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Security & Audits ── */}
+      <section style={{ padding: "120px 24px", position: "relative", zIndex: 1, background: "rgba(0,0,0,0.3)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "64px", alignItems: "center" }}>
+          <div>
+            <h2 style={{ fontSize: "3rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>Bank-Grade Security</h2>
+            <p style={{ color: "#A1A1AA", fontSize: "1.2rem", lineHeight: 1.6, marginBottom: "32px" }}>
+              Zing is built on Soroban's advanced <code>require_auth</code> framework. Every intent is strictly bounded by time and price, guaranteeing mathematical certainty over your trades.
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
+              {["Non-custodial by default", "Time-locked intents", "Solver-agnostic execution", "Anti-MEV protection"].map((item, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: "12px", color: "#fff", fontSize: "1.1rem" }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00FF88" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="glass-card" style={{ padding: "40px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+             <div style={{ padding: "32px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", textAlign: "center" }}>
+               <div style={{ fontSize: "2rem", fontWeight: 800, color: "#fff", marginBottom: "8px" }}>100%</div>
+               <div style={{ color: "#A1A1AA", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Open Source</div>
+             </div>
+             <div style={{ padding: "32px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", textAlign: "center" }}>
+               <div style={{ fontSize: "2rem", fontWeight: 800, color: "#fff", marginBottom: "8px" }}>Zero</div>
+               <div style={{ color: "#A1A1AA", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Custody Risk</div>
+             </div>
+             <div style={{ padding: "32px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", textAlign: "center", gridColumn: "span 2" }}>
+               <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#00E5FF", marginBottom: "8px" }}>Stellar Network</div>
+               <div style={{ color: "#A1A1AA", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Built natively for Soroban</div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Call to Action ── */}
+      <section style={{ padding: "120px 24px", position: "relative", zIndex: 1, textAlign: "center" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, rgba(0,0,0,0) 70%)", filter: "blur(60px)", zIndex: -1 }} />
+        <h2 style={{ fontSize: "4rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "32px", color: "#fff" }}>Ready to upgrade your trading?</h2>
+        <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "12px", padding: "20px 48px", fontSize: "1.2rem", borderRadius: "100px", textDecoration: "none", boxShadow: "0 0 40px rgba(0, 229, 255, 0.3)" }}>
+          Launch Zing OS
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </Link>
+      </section>
+
       {/* ── Footer ── */}
       <footer className="glass" style={{ padding: "48px 24px", position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)", borderRadius: "0" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
