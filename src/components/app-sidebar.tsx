@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, 
   ArrowRightLeft, 
+  TrendingUp,
   Rocket, 
   Image as ImageIcon, 
   Users, 
@@ -76,6 +77,7 @@ export default function AppSidebar() {
         <div style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", padding: "12px 12px 4px 12px", letterSpacing: "0.05em" }}>Menu</div>
         <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
         <NavItem href="/trade" icon={ArrowRightLeft} label="Trade (Spot)" />
+        <NavItem href="/trade/predictions" icon={TrendingUp} label="Prediction Markets" badge="HOT" />
         <NavItem href="/perps" icon={ArrowRightLeft} label="Perps & Futures" disabled />
         <NavItem href="/launch" icon={Rocket} label="LaunchZone" />
         {pathname.startsWith("/launch") && (
