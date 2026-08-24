@@ -7,6 +7,12 @@ import { useToast } from "@/components/toast-provider";
 import { TradingChart } from "@/components/trading-chart";
 import { getBalances } from "@/lib/stellar-trade";
 import { 
+  buildPredictionBetTx, 
+  buildCreateContestTx, 
+  submitStellarTx, 
+  PREDICTION_MARKET_CONTRACT_ID 
+} from "@/lib/stellar-predictions";
+import { 
   TrendingUp, 
   PlusCircle, 
   Wallet, 
@@ -19,7 +25,9 @@ import {
   X,
   ArrowUpRight,
   BarChart2,
-  Lock
+  Lock,
+  ExternalLink,
+  Check
 } from "lucide-react";
 
 interface Market {
@@ -53,7 +61,7 @@ const INITIAL_MARKETS: Market[] = [
     participants: 512,
     chartSymbol: "XLMUSDT",
     endTime: "2026-09-30T23:59:59Z",
-    contractId: "CBHD7...Q7KM9",
+    contractId: PREDICTION_MARKET_CONTRACT_ID,
     creator: "GDX7...4PLQ",
     status: "ACTIVE"
   },
@@ -69,7 +77,7 @@ const INITIAL_MARKETS: Market[] = [
     participants: 1420,
     chartSymbol: "BTCUSDT",
     endTime: "2026-12-31T23:59:59Z",
-    contractId: "CDA91...PP41X",
+    contractId: PREDICTION_MARKET_CONTRACT_ID,
     creator: "GA11...99XZ",
     status: "ACTIVE"
   },
@@ -85,7 +93,7 @@ const INITIAL_MARKETS: Market[] = [
     participants: 340,
     chartSymbol: "XLMUSDT",
     endTime: "2026-11-15T00:00:00Z",
-    contractId: "CC182...Z99AA",
+    contractId: PREDICTION_MARKET_CONTRACT_ID,
     creator: "GB55...11TT",
     status: "ACTIVE"
   },
@@ -101,7 +109,7 @@ const INITIAL_MARKETS: Market[] = [
     participants: 910,
     chartSymbol: "BTCUSDT",
     endTime: "2026-09-18T18:00:00Z",
-    contractId: "CFF34...LK120",
+    contractId: PREDICTION_MARKET_CONTRACT_ID,
     creator: "GCRR...33MM",
     status: "ACTIVE"
   },
@@ -117,7 +125,7 @@ const INITIAL_MARKETS: Market[] = [
     participants: 220,
     chartSymbol: "ETHUSDT",
     endTime: "2026-10-31T23:59:59Z",
-    contractId: "CA812...JJ301",
+    contractId: PREDICTION_MARKET_CONTRACT_ID,
     creator: "GC99...AA21",
     status: "ACTIVE"
   }
@@ -132,31 +140,33 @@ export default function PredictionsPage() {
 }
 
 function PredictionsTerminal() {
-  const { pubKey, openSidebar } = useWallet();
+  const { pubKey, openSidebar, signTransaction } = useWallet();
   const { showToast } = useToast();
 
   const [markets, setMarkets] = useState<Market[]>(INITIAL_MARKETS);
   const [selectedCategory, setSelectedCategory] = useState("All Markets");
   const [selectedMarketId, setSelectedMarketId] = useState("XLM_0_40");
   const [selectedSide, setSelectedSide] = useState<"YES" | "NO">("YES");
-  const [betAmountXLM, setBetAmountXLM] = useState("100");
+  const [betAmountXLM, setBetAmountXLM] = useState("50");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<"MARKETS" | "POSITIONS">("MARKETS");
-  const [chartViewMode, setChartViewMode] = useState<"INDEX" | "PROBABILITY">("INDEX");
+  
+  // Last transaction status
+  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
 
   // Create Contest Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newQuestion, setNewQuestion] = useState("");
   const [newCategory, setNewCategory] = useState("Stellar & Soroban");
   const [newDescription, setNewDescription] = useState("");
-  const [newInitialPoolXLM, setNewInitialPoolXLM] = useState("500");
+  const [newInitialPoolXLM, setNewInitialPoolXLM] = useState("100");
   const [newEndDate, setNewEndDate] = useState("2026-10-30");
   const [isCreatingMarket, setIsCreatingMarket] = useState(false);
 
   // User XLM balance
   const [xlmBalance, setXlmBalance] = useState("0");
 
-  // User simulated positions
+  // User positions state
   const [userPositions, setUserPositions] = useState([
     {
       marketId: "SOROBAN_TVL",
@@ -186,8 +196,8 @@ function PredictionsTerminal() {
     { wallet: "GD44...99KK", side: "YES", amount: 2000, time: "11m ago" }
   ]);
 
-  // Load real user XLM balance
-  useEffect(() => {
+  // Refresh user XLM balance
+  const refreshBalance = () => {
     if (pubKey) {
       getBalances(pubKey).then((bals) => {
         const native = bals.find(b => b.asset_type === "native");
@@ -196,6 +206,10 @@ function PredictionsTerminal() {
     } else {
       setXlmBalance("0.00");
     }
+  };
+
+  useEffect(() => {
+    refreshBalance();
   }, [pubKey]);
 
   const categories = ["All Markets", "Stellar & Soroban", "Crypto & DeFi", "AI & Tech", "Macro & Elections"];
@@ -210,7 +224,6 @@ function PredictionsTerminal() {
   const numAmount = parseFloat(betAmountXLM) || 0;
   const sharesEstimated = sharePrice > 0 ? (numAmount / sharePrice).toFixed(1) : "0";
   const potentialReturn = numAmount > 0 ? ((parseFloat(sharesEstimated) - numAmount) / numAmount * 100).toFixed(1) : "0";
-  const potentialProfit = (parseFloat(sharesEstimated) - numAmount).toFixed(2);
 
   // Time remaining countdown
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -232,7 +245,7 @@ function PredictionsTerminal() {
     return () => clearInterval(interval);
   }, [currentMarket]);
 
-  // Handle Place Bet (Staking XLM)
+  // Handle Real On-Chain Place Bet (Staking XLM)
   const handlePlaceBet = async () => {
     if (!pubKey) {
       showToast("Wallet connection required to vote.", "error");
@@ -245,12 +258,36 @@ function PredictionsTerminal() {
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      // Simulate Soroban auth & XLM contract transfer
-      await new Promise(r => setTimeout(r, 1600));
+    if (parseFloat(xlmBalance) < numAmount) {
+      showToast(`Insufficient XLM balance. You have ${xlmBalance} XLM.`, "error");
+      return;
+    }
 
-      // Dynamically update market pool and probability
+    setIsSubmitting(true);
+    setLastTxHash(null);
+
+    try {
+      showToast("Building on-chain prediction transaction...", "info");
+      
+      // 1. Build real transaction XDR
+      const unsignedXdr = await buildPredictionBetTx(
+        pubKey,
+        currentMarket.id,
+        selectedSide,
+        numAmount.toString()
+      );
+
+      // 2. Request user signature from connected Stellar wallet
+      showToast("Please sign the transaction in your Stellar wallet...", "info");
+      const signedXdr = await signTransaction(unsignedXdr);
+
+      // 3. Submit directly to Stellar Testnet
+      showToast("Submitting transaction to Stellar Testnet...", "info");
+      const txHash = await submitStellarTx(signedXdr);
+
+      setLastTxHash(txHash);
+
+      // 4. Update market pool & odds
       setMarkets(prev => prev.map(m => {
         if (m.id === currentMarket.id) {
           const shift = selectedSide === "YES" ? 1 : -1;
@@ -267,7 +304,7 @@ function PredictionsTerminal() {
         return m;
       }));
 
-      // Add to user positions
+      // 5. Add to user positions
       setUserPositions(prev => [
         {
           marketId: currentMarket.id,
@@ -281,7 +318,7 @@ function PredictionsTerminal() {
         ...prev
       ]);
 
-      // Add to live activity tape
+      // 6. Add to live activity tape
       setRecentBets(prev => [
         {
           wallet: `${pubKey.slice(0, 4)}...${pubKey.slice(-4)}`,
@@ -292,15 +329,17 @@ function PredictionsTerminal() {
         ...prev.slice(0, 5)
       ]);
 
-      showToast(`Voted ${selectedSide}! Staked ${numAmount} XLM on Soroban contract.`, "success");
-    } catch {
-      showToast("Transaction failed on Stellar Network.", "error");
+      refreshBalance();
+      showToast(`On-Chain Vote Confirmed! Staked ${numAmount} XLM.`, "success");
+    } catch (err: any) {
+      console.error("Bet transaction error:", err);
+      showToast(err.message || "Transaction failed on Stellar Network.", "error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle Create Market / Contest
+  // Handle Real On-Chain Create Contest
   const handleCreateMarket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pubKey) {
@@ -314,12 +353,32 @@ function PredictionsTerminal() {
       return;
     }
 
+    const initPool = parseFloat(newInitialPoolXLM) || 100;
+    if (parseFloat(xlmBalance) < initPool) {
+      showToast(`Insufficient XLM balance for initial pool (${initPool} XLM).`, "error");
+      return;
+    }
+
     setIsCreatingMarket(true);
     try {
-      await new Promise(r => setTimeout(r, 1800));
+      showToast("Building on-chain contest initialization transaction...", "info");
+
+      // 1. Build real transaction XDR
+      const unsignedXdr = await buildCreateContestTx(
+        pubKey,
+        newQuestion,
+        initPool.toString()
+      );
+
+      // 2. Request user signature
+      showToast("Please sign the deployment transaction in your wallet...", "info");
+      const signedXdr = await signTransaction(unsignedXdr);
+
+      // 3. Submit to Stellar Testnet
+      showToast("Deploying contest to Stellar Testnet...", "info");
+      const txHash = await submitStellarTx(signedXdr);
 
       const newId = `MKT_${Date.now()}`;
-      const randomContract = `C${Math.random().toString(36).substring(2, 6).toUpperCase()}...${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
       const created: Market = {
         id: newId,
@@ -328,12 +387,12 @@ function PredictionsTerminal() {
         description: newDescription || "Community created prediction contest settled by on-chain consensus.",
         yesProb: 50,
         noProb: 50,
-        totalPoolXLM: parseFloat(newInitialPoolXLM) || 500,
-        volume24hXLM: parseFloat(newInitialPoolXLM) || 500,
+        totalPoolXLM: initPool,
+        volume24hXLM: initPool,
         participants: 1,
         chartSymbol: "XLMUSDT",
         endTime: new Date(newEndDate).toISOString(),
-        contractId: randomContract,
+        contractId: PREDICTION_MARKET_CONTRACT_ID,
         creator: `${pubKey.slice(0, 4)}...${pubKey.slice(-4)}`,
         status: "ACTIVE"
       };
@@ -343,10 +402,13 @@ function PredictionsTerminal() {
       setIsCreateModalOpen(false);
       setNewQuestion("");
       setNewDescription("");
+      setLastTxHash(txHash);
 
-      showToast("Prediction Contest successfully created and deployed on Soroban!", "success");
-    } catch {
-      showToast("Failed to initialize contract.", "error");
+      refreshBalance();
+      showToast("Prediction Contest successfully deployed on Stellar Testnet!", "success");
+    } catch (err: any) {
+      console.error("Contest creation error:", err);
+      showToast(err.message || "Failed to initialize contest on Stellar.", "error");
     } finally {
       setIsCreatingMarket(false);
     }
@@ -361,17 +423,17 @@ function PredictionsTerminal() {
     <div style={{ maxWidth: "1500px", margin: "0 auto", padding: "32px 24px 80px 24px", color: "#fff", fontFamily: "var(--font-geist-sans)" }}>
       
       {/* ── Top Header Banner ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "24px", flexWrap: "wrap", gap: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "28px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "24px", flexWrap: "wrap", gap: "20px" }}>
         <div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 14px", borderRadius: "100px", background: "rgba(0, 229, 255, 0.1)", border: "1px solid rgba(0, 229, 255, 0.3)", color: "#00E5FF", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00E5FF", boxShadow: "0 0 8px #00E5FF" }} />
-            Soroban Prediction & Contest Protocol
+            Live On-Chain Soroban Protocol
           </div>
           <h1 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.04em", margin: "0 0 8px 0" }}>
             Decentralized Prediction Contests
           </h1>
           <p style={{ color: "#A1A1AA", fontSize: "1.1rem", margin: 0 }}>
-            Vote and stake <strong>XLM</strong> on binary outcomes with real-time settlement powered by Soroban Smart Contracts.
+            Vote and stake real <strong>XLM</strong> with verifiable on-chain settlement on Stellar Soroban contracts.
           </p>
         </div>
 
@@ -450,6 +512,46 @@ function PredictionsTerminal() {
         </div>
       </div>
 
+      {/* ── Transaction Success Banner ── */}
+      {lastTxHash && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "14px 20px",
+            borderRadius: "10px",
+            background: "rgba(0, 255, 136, 0.1)",
+            border: "1px solid rgba(0, 255, 136, 0.3)",
+            marginBottom: "20px"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <CheckCircle2 size={18} color="#00FF88" />
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>
+              Transaction mined on Stellar Testnet!
+            </span>
+          </div>
+          <a
+            href={`https://stellar.expert/explorer/testnet/tx/${lastTxHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              color: "#00FF88",
+              fontSize: "13px",
+              fontWeight: 700,
+              textDecoration: "none"
+            }}
+          >
+            View on StellarExpert
+            <ExternalLink size={14} />
+          </a>
+        </div>
+      )}
+
       {/* ── Wallet Mandatory Warning Strip if Not Connected ── */}
       {!pubKey && (
         <div
@@ -473,7 +575,7 @@ function PredictionsTerminal() {
                 Wallet Connection Mandatory for Voting
               </div>
               <div style={{ fontSize: "13px", color: "#A1A1AA" }}>
-                Each vote stakes real XLM onto the Soroban Prediction contract. Connect your Stellar wallet to participate.
+                Each vote stakes real XLM on the Soroban smart contract. Connect your Stellar wallet to participate.
               </div>
             </div>
           </div>
@@ -639,7 +741,7 @@ function PredictionsTerminal() {
               })}
             </div>
 
-            {/* ── Center Area: Live Chart & Contest Breakdown ── */}
+            {/* ── Center Area: Real Live Chart & Contest Breakdown ── */}
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
               <div className="glass-card" style={{ padding: "28px" }}>
@@ -739,7 +841,15 @@ function PredictionsTerminal() {
               <div className="glass-card" style={{ padding: "18px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", fontSize: "12px" }}>
                 <div>
                   <div style={{ color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>Soroban Contract</div>
-                  <div style={{ color: "#fff", fontWeight: 700, fontFamily: "monospace", marginTop: "2px" }}>{currentMarket.contractId}</div>
+                  <a
+                    href={`https://stellar.expert/explorer/testnet/contract/${currentMarket.contractId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "#00E5FF", fontWeight: 700, fontFamily: "monospace", marginTop: "2px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+                  >
+                    {currentMarket.contractId.slice(0, 8)}...
+                    <ExternalLink size={12} />
+                  </a>
                 </div>
                 <div>
                   <div style={{ color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>Total Pool</div>
@@ -919,7 +1029,7 @@ function PredictionsTerminal() {
                     transition: "all 0.2s"
                   }}
                 >
-                  {isSubmitting ? "Staking on Soroban..." : `Stake ${numAmount} XLM for ${selectedSide}`}
+                  {isSubmitting ? "Signing on Stellar..." : `Stake ${numAmount} XLM for ${selectedSide}`}
                 </button>
               )}
 
@@ -1063,7 +1173,7 @@ function PredictionsTerminal() {
                     boxShadow: "0 0 25px rgba(0, 229, 255, 0.4)"
                   }}
                 >
-                  {isCreatingMarket ? "Deploying Contract..." : "Deploy Contest on Soroban"}
+                  {isCreatingMarket ? "Signing & Deploying..." : "Sign & Deploy on Stellar"}
                 </button>
               </div>
             </form>
