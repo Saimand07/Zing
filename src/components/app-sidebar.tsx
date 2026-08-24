@@ -44,8 +44,8 @@ export default function AppSidebar() {
     setIsOpen(false);
   }, [pathname]);
 
-  // Do not render sidebar on landing page
-  if (pathname === "/") return null;
+  // Do not render sidebar on landing page or auth page
+  if (pathname === "/" || pathname === "/auth") return null;
 
   const NavItem = ({ href, icon: Icon, label, disabled = false, badge = "" }: any) => {
     const isActive = pathname.startsWith(href) && href !== "/" && !disabled;

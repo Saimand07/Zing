@@ -92,6 +92,9 @@ export default function Nav() {
   const activeAddress = pubKey || profile?.walletAddress;
   const displayName = profile?.username || (user ? user.email?.split("@")[0] : activeAddress ? `Stellar_${activeAddress.slice(-4)}` : "Trader") || "Trader";
 
+  // Don't render nav on auth page — it has its own standalone layout
+  if (pathname === "/auth") return null;
+
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 40 }}>
       <nav style={{

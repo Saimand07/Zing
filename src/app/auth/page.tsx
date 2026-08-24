@@ -130,7 +130,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ maxWidth: "480px", margin: "40px auto 80px auto", padding: "20px", color: "#fff", fontFamily: "var(--font-geist-sans)" }}>
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px",
+      position: "relative",
+      // Dark overlay to tame the bright WebGL background
+      background: "rgba(9, 9, 11, 0.72)",
+      backdropFilter: "brightness(0.4)",
+    }}>
+      <div style={{ width: "100%", maxWidth: "440px", color: "#fff", fontFamily: "var(--font-geist-sans)" }}>
       
       {/* Brand Header */}
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
@@ -358,11 +369,12 @@ export default function AuthPage() {
         {/* Security Footer */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center", marginTop: "20px", color: "#52525B", fontSize: "11px" }}>
           <Shield size={12} />
-          <span>Secured by Supabase & Stellar Soroban Auth</span>
+          <span>Secured by Supabase &amp; Stellar Soroban Auth</span>
         </div>
 
       </div>
 
+      </div>
     </div>
   );
 }
