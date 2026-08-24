@@ -1,8 +1,8 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _}, Env, Address};
 use soroban_sdk::token::{Client as TokenClient, StellarAssetClient as AssetClient};
+use soroban_sdk::{testutils::Address as _, Address, Env};
 
 #[test]
 fn test_intent_swap() {
@@ -22,7 +22,7 @@ fn test_intent_swap() {
 
     let sell_token_client = TokenClient::new(&env, &sell_token.address());
     let buy_token_client = TokenClient::new(&env, &buy_token.address());
-    
+
     let sell_asset_client = AssetClient::new(&env, &sell_token.address());
     let buy_asset_client = AssetClient::new(&env, &buy_token.address());
 
