@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/auth-provider";
 import { useWallet } from "@/components/wallet-provider";
 import { useToast } from "@/components/toast-provider";
 import { TradingChart } from "@/components/trading-chart";
 import { PredictionVoteChart } from "@/components/prediction-vote-chart";
 import { getBalances } from "@/lib/stellar-trade";
+import { recordUserTransaction } from "@/lib/transactions";
 import { 
   buildPredictionBetTx, 
   buildCreateContestTx, 
@@ -141,6 +143,7 @@ export default function PredictionsPage() {
 }
 
 function PredictionsTerminal() {
+  const { user } = useAuth();
   const { pubKey, openSidebar, signTransaction } = useWallet();
   const { showToast } = useToast();
 
@@ -286,6 +289,20 @@ function PredictionsTerminal() {
 
       setLastTxHash(txHash);
 
+      // Record transaction to Supabase & User Profile Ledger
+      recordUserTransaction({
+        txHash,
+        userId: user?.id,
+        walletAddress: pubKey,
+        type: "PREDICTION_BET",
+        amount: numAmount.toString(),
+        asset: "XLM",
+        description: `Voted ${selectedSide} on "${currentMarket.question.slice(0, 45)}..."`,
+        status: "SUCCESS",
+        timestamp: new Date().toISOString(),
+        explorerUrl: `https://stellar.expert/explorer/testnet/tx/${txHash}`
+      });
+
       setMarkets(prev => prev.map(m => {
         if (m.id === currentMarket.id) {
           const shift = selectedSide === "YES" ? 1 : -1;
@@ -396,6 +413,20 @@ function PredictionsTerminal() {
       setNewQuestion("");
       setNewDescription("");
       setLastTxHash(txHash);
+
+      // Record transaction to Supabase & User Profile Ledger
+      recordUserTransaction({
+        txHash,
+        userId: user?.id,
+        walletAddress: pubKey,
+        type: "CONTEST_CREATE",
+        amount: initPool.toString(),
+        asset: "XLM",
+        description: `Created Contest: "${newQuestion.slice(0, 45)}..."`,
+        status: "SUCCESS",
+        timestamp: new Date().toISOString(),
+        explorerUrl: `https://stellar.expert/explorer/testnet/tx/${txHash}`
+      });
 
       refreshBalance();
       showToast("Prediction Contest successfully deployed on Stellar Testnet!", "success");

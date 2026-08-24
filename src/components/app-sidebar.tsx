@@ -13,7 +13,8 @@ import {
   Wallet,
   Settings,
   Trophy,
-  Code
+  Code,
+  User
 } from "lucide-react";
 
 export default function AppSidebar() {
@@ -97,6 +98,7 @@ export default function AppSidebar() {
       </div>
 
       <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+        <NavItem href="/profile" icon={User} label="User Profile" />
         <NavItem href="/wallet" icon={Wallet} label="My Wallet" />
         <NavItem href="/settings" icon={Settings} label="Settings" />
       </div>
