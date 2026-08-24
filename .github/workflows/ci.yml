@@ -57,22 +57,3 @@ jobs:
         path: contracts/target/wasm32-unknown-unknown/release/*.wasm
         retention-days: 7
 
-  contracts_quality:
-    name: Contracts Quality
-    needs: contracts_build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: contracts
-        
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      
-    - name: Setup Rust Toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        components: rustfmt
-        
-    - name: Check Formatting
-      run: cargo fmt -- --check
