@@ -40,7 +40,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [pubKey, setPubKey] = useState<string | null>(null);
   const [activeWalletId, setActiveWalletId] = useState<string | null>(null);
   const { showToast } = useToast();
-  const { user } = useAuth();
+  const { user, linkWalletToProfile } = useAuth();
 
   // Restore session
   useEffect(() => {
@@ -49,8 +49,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (saved && savedId) {
       setPubKey(saved);
       setActiveWalletId(savedId);
+      linkWalletToProfile(saved);
     }
-  }, []);
+  }, [linkWalletToProfile]);
 
   const getSupportedWallets = async () => {
     // We already hardcoded the list in the sidebar, so this is just a fallback
@@ -89,6 +90,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setActiveWalletId(walletId);
       localStorage.setItem("zing_wallet_pubkey", address);
       localStorage.setItem("zing_wallet_id", walletId);
+      linkWalletToProfile(address);
       setIsSidebarOpen(false);
       
       // Auto-fund on testnet

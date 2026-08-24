@@ -15,12 +15,12 @@ import {
   CheckCircle2, 
   Shield, 
   Sparkles,
-  ExternalLink
+  Zap
 } from "lucide-react";
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user, signInWithEmail, signUpWithEmail } = useAuth();
+  const { user, profile, isAuthenticated, signInWithEmail, signUpWithEmail, loginWithWalletAddress } = useAuth();
   const { pubKey, openSidebar } = useWallet();
   const { showToast } = useToast();
 
@@ -30,8 +30,8 @@ export default function AuthPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already authenticated, allow navigating to profile or dashboard
-  if (user) {
+  // If already authenticated
+  if (isAuthenticated && profile) {
     return (
       <div style={{ maxWidth: "540px", margin: "80px auto", padding: "32px", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", textAlign: "center", color: "#fff" }}>
         <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(16, 185, 129, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px auto", color: "#10B981" }}>
@@ -39,7 +39,7 @@ export default function AuthPage() {
         </div>
         <h2 style={{ fontSize: "1.5rem", fontWeight: 700, margin: "0 0 8px 0" }}>You are Signed In</h2>
         <p style={{ color: "#A1A1AA", fontSize: "14px", marginBottom: "24px" }}>
-          Authenticated as <strong>{user.email}</strong>
+          Authenticated as <strong>{profile.username}</strong> ({profile.email || (profile.walletAddress ? `${profile.walletAddress.slice(0, 8)}...` : "Web3 User")})
         </p>
 
         <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
@@ -103,10 +103,19 @@ export default function AuthPage() {
       if (res.error) {
         showToast(res.error, "error");
       } else {
-        showToast("Account created! Check your email or sign in.", "success");
+        showToast("Account created! Session initialized.", "success");
         router.push("/profile");
       }
     }
+    setLoading(false);
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    const demoAddress = "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQ6K4L7UDSOEB2ECTBCP4F";
+    await loginWithWalletAddress(demoAddress);
+    showToast("Demo Testnet Session Activated!", "success");
+    router.push("/profile");
     setLoading(false);
   };
 
@@ -130,10 +139,10 @@ export default function AuthPage() {
         </p>
       </div>
 
-      {/* Main Authentication Card */}
+      {/* Main Card */}
       <div style={{ background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", padding: "24px" }}>
         
-        {/* Mode Switch Tabs */}
+        {/* Mode Switch */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", padding: "3px", background: "rgba(9, 9, 11, 0.6)", borderRadius: "6px", border: "1px solid #27272A", marginBottom: "20px" }}>
           <button
             onClick={() => setMode("LOGIN")}
@@ -279,38 +288,64 @@ export default function AuthPage() {
         {/* Divider */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "20px 0" }}>
           <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.05)" }} />
-          <span style={{ fontSize: "11px", color: "#52525B", textTransform: "uppercase", fontWeight: 600 }}>Or Web3</span>
+          <span style={{ fontSize: "11px", color: "#52525B", textTransform: "uppercase", fontWeight: 600 }}>Or 1-Click Web3</span>
           <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.05)" }} />
         </div>
 
         {/* Web3 Wallet Quick Connect */}
-        <button
-          onClick={() => {
-            openSidebar();
-            showToast("Opening Stellar wallet connector...", "info");
-          }}
-          style={{
-            width: "100%",
-            padding: "11px",
-            borderRadius: "8px",
-            background: "rgba(9, 9, 11, 0.5)",
-            border: "1px solid #27272A",
-            color: "#fff",
-            fontWeight: 600,
-            fontSize: "13px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            transition: "all 0.2s"
-          }}
-        >
-          <Wallet size={15} color="#3B82F6" />
-          {pubKey ? `Connected: ${pubKey.slice(0, 5)}...${pubKey.slice(-4)}` : "Connect Stellar Wallet"}
-        </button>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <button
+            onClick={() => {
+              openSidebar();
+              showToast("Opening Stellar wallet connector...", "info");
+            }}
+            style={{
+              width: "100%",
+              padding: "11px",
+              borderRadius: "8px",
+              background: "rgba(9, 9, 11, 0.5)",
+              border: "1px solid #27272A",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "13px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              transition: "all 0.2s"
+            }}
+          >
+            <Wallet size={15} color="#3B82F6" />
+            {pubKey ? `Connected: ${pubKey.slice(0, 6)}...${pubKey.slice(-4)}` : "Connect Stellar Wallet (Freighter/Albedo)"}
+          </button>
 
-        {/* Security Footer Note */}
+          {/* Quick Demo Mode */}
+          <button
+            onClick={handleDemoLogin}
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "9px",
+              borderRadius: "8px",
+              background: "transparent",
+              border: "1px dashed rgba(255,255,255,0.1)",
+              color: "#71717A",
+              fontWeight: 500,
+              fontSize: "12px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px"
+            }}
+          >
+            <Zap size={13} color="#F59E0B" />
+            Explore in Quick Demo Session Mode
+          </button>
+        </div>
+
+        {/* Security Footer */}
         <div style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center", marginTop: "20px", color: "#52525B", fontSize: "11px" }}>
           <Shield size={12} />
           <span>Secured by Supabase & Stellar Soroban Auth</span>
