@@ -6,6 +6,7 @@ members = [
     "smart_wallet", 
     "prediction_market",
     "token",
+    "intent_swap",
 ]
 resolver = "2"
 

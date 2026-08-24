@@ -34,6 +34,18 @@ The current DeFi landscape is heavily fragmented. Traders face massive friction 
 ### The Solution: Zing
 Zing is a unified **Chain-Abstracted Trading & Launch OS** built fundamentally on the Stellar network. We replace custodial exchanges and clunky bridges with trustless smart contracts and intent-based routing.
 
+Zing abstracts the complexities of bridge selection, gas management, and fragmented liquidity into a single, unified "operating system." Whether you're swapping native Stellar assets or executing cross-chain intents, Zing handles the execution underneath a beautiful, Web2-grade interface.
+
+## 🚀 What's New: Intent-Based Swap Engine (DeFi 2.0)
+We have successfully transformed Zing's architecture into a cutting-edge **Intent-Based Trading Protocol**. Instead of manually managing AMM routing, slippage, or gas fees, Zing users now sign an "Intent" (e.g., "I will trade 100 USDC for at least 95 XLM"). Off-chain Solvers compete to fill these intents, paying the gas on behalf of the user, and guaranteeing zero slippage and MEV protection natively on Soroban!
+
+**Testnet Contract Deployment:**
+- **Contract ID:** `CCSJQNIM7UWJLMRDD5VSPQDUNQKG5A7VZZVVGOOLMTLG3RIQY5NQIRH7`
+- **Explorer Link:** [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/5b3fdcc32449835f6ccfb551b8a30f04204bf90a011456a4ce27d0785ee0650d)
+
+---
+
+## 🏗 System Architecture
 By utilizing Stellar's near-zero fee, high-throughput ledger and Soroban's rust-based smart contracts, Zing offers:
 - **Unified Trading Terminal:** Spot trading on Stellar DEX and cross-chain swaps without leaving the interface.
 - **Intent-Centric Architecture:** Users and AI agents express goals (e.g., "Swap SOL to XLM") in plain terms. Zing's solvers use NEAR Intents and Axelar to determine the optimal cross-chain path.
