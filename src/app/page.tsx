@@ -2,7 +2,6 @@ import Link from "next/link";
 import { fetchOrderBook, getMidPrice } from "@/lib/stellar";
 import { supabase } from "@/lib/supabase";
 import { GLSLHills } from "@/components/ui/glsl-hills";
-import { ZingLogo } from "@/components/ui/logo";
 
 async function getLiveData() {
   let midPrice: string | null = null;
@@ -56,7 +55,7 @@ export default async function HomePage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "40px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <ZingLogo size={32} />
+            <img src="/logo.jpg" alt="ZING Logo" style={{ width: "32px", height: "32px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 0 20px rgba(0, 229, 255, 0.4)" }} />
             <span style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
           </div>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">
