@@ -32,7 +32,7 @@ export default async function HomePage() {
       
       {/* 3D GLSL Hills Background */}
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, pointerEvents: "none", opacity: 1.0 }}>
-        <GLSLHills width="100vw" height="100vh" />
+        <GLSLHills width="100%" height="100%" />
       </div>
 
       {/* ── Top Navigation ── */}
@@ -49,14 +49,14 @@ export default async function HomePage() {
           width: "90%",
           maxWidth: "1200px",
           borderRadius: "70px",
-          padding: "12px 24px",
+          padding: "10px 16px",
           zIndex: 1000,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "40px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <img src="/logo.jpg" alt="ZING Logo" style={{ width: "32px", height: "32px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 0 20px rgba(0, 229, 255, 0.4)" }} />
-            <span style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
+            <span className="hidden sm:inline" style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
           </div>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">
             <Link href="#ecosystem" className="nav-link">Ecosystem</Link>
@@ -69,7 +69,7 @@ export default async function HomePage() {
         <Link
           href="/dashboard"
           className="btn-primary"
-          style={{ padding: "12px 28px", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
+          style={{ padding: "10px 20px", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px", fontSize: "14px" }}
         >
           Launch App
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
@@ -84,13 +84,13 @@ export default async function HomePage() {
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          padding: "160px 24px 80px 24px",
+          padding: "140px 16px 60px 16px",
           textAlign: "center",
           position: "relative",
           zIndex: 1,
         }}
       >
-        <div className="animate-float" style={{ display: "inline-flex", alignItems: "center", gap: "12px", padding: "8px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "100px", fontSize: "14px", fontWeight: 600, color: "#fff", marginBottom: "32px", boxShadow: "0 0 30px rgba(0,0,0,0.5)", backdropFilter: "blur(10px)" }}>
+        <div className="animate-float" style={{ display: "inline-flex", alignItems: "center", gap: "12px", padding: "8px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "100px", fontSize: "12px", fontWeight: 600, color: "#fff", marginBottom: "24px", boxShadow: "0 0 30px rgba(0,0,0,0.5)", backdropFilter: "blur(10px)" }}>
           <span style={{ width: "8px", height: "8px", background: "#00E5FF", borderRadius: "50%", boxShadow: "0 0 10px #00E5FF" }} className="animate-glow" />
           Powered by Stellar & Soroban
         </div>
@@ -98,11 +98,11 @@ export default async function HomePage() {
         <h1
           className="text-gradient"
           style={{
-            fontSize: "clamp(3.5rem, 8vw, 7.5rem)",
+            fontSize: "clamp(2.5rem, 8vw, 7.5rem)",
             fontWeight: 800,
             lineHeight: 1.05,
             letterSpacing: "-0.04em",
-            margin: "0 0 32px 0",
+            margin: "0 0 24px 0",
             maxWidth: "1000px"
           }}
         >
@@ -111,22 +111,22 @@ export default async function HomePage() {
         
         <p
           style={{
-            fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
+            fontSize: "clamp(1rem, 2vw, 1.4rem)",
             color: "#A1A1AA",
             lineHeight: 1.6,
             maxWidth: "700px",
-            margin: "0 auto 48px auto",
+            margin: "0 auto 40px auto",
             fontWeight: 400,
           }}
         >
           Chain-abstracted infrastructure for launching tokens, trading deep liquidity, and executing intents across Stellar and beyond.
         </p>
 
-        <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center", flexDirection: "column", width: "100%" }}>
           <Link
             href="/dashboard"
             className="btn-primary"
-            style={{ padding: "18px 42px", textDecoration: "none", fontSize: "18px", display: "flex", alignItems: "center", gap: "12px" }}
+            style={{ padding: "16px 32px", textDecoration: "none", fontSize: "16px", display: "flex", alignItems: "center", gap: "12px", width: "100%", maxWidth: "300px", justifyContent: "center" }}
           >
             Start Trading
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
@@ -135,7 +135,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Live Stats Section ── */}
-      <section id="stats" style={{ padding: "80px 24px", position: "relative", zIndex: 1 }}>
+      <section id="stats" style={{ padding: "60px 16px", position: "relative", zIndex: 1 }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
             {[

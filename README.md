@@ -148,6 +148,7 @@ Zing/
 |----------|---------|
 | **GitHub Repository** | [github.com/Saimand07/Zing](https://github.com/Saimand07/Zing) |
 | **Demo Video** | [Watch on YouTube](https://youtu.be/Gs5oL4_rzvw) |
+| **User Feedback** | [View / Submit Feedback](https://docs.google.com/spreadsheets/d/e/2PACX-1vTheaSg2eZ36h2mwmL4cRIanqPRUaPg10RCY-TeEJbMbvp3axvJr2xJukN3zZAJB4ZKmf8Mg7P6zfhq/pubhtml) |
 | **Network** | Stellar Testnet |
 | **Soroban RPC** | `https://soroban-testnet.stellar.org` |
 | **Horizon API** | `https://horizon-testnet.stellar.org` |
