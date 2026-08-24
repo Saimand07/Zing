@@ -13,7 +13,7 @@ export function AppBackground() {
   
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: -1, pointerEvents: "none" }}>
-      <WebGLLiquid className="absolute inset-0" opacity={0.65} />
+      <WebGLLiquid className="absolute inset-0" opacity={0.40} />
     </div>
   );
 }
