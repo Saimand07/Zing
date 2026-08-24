@@ -173,9 +173,12 @@ All contracts are written in Rust, compiled to `wasm32-unknown-unknown`, and dep
 
 ## Screenshots
 
-### Landing Page
-![Landing Page](public/Screenshot/Landing%20Page.png)
-> Zing's entry point — dark glassmorphism hero with search, wallet connect, and live network status.
+### Landing Page & Mobile Responsive Design
+<p align="center">
+  <img src="public/Screenshot/Landing%20Page.png" width="70%" />
+  <img src="public/Screenshot/Mobile%20Overview.png" width="25%" />
+</p>
+> Zing's entry point — dark glassmorphism hero with search, wallet connect, and live network status. Fully optimized for mobile devices.
 
 ---
 
