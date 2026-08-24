@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { GLSLHills } from "@/components/ui/glsl-hills";
+import { ZingLogo } from "@/components/ui/logo";
 
 export default function AboutPage() {
   return (
@@ -30,7 +31,7 @@ export default function AboutPage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "40px" }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
-            <img src="/logo.jpg" alt="ZING Logo" style={{ width: "32px", height: "32px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 0 20px rgba(0, 229, 255, 0.4)" }} />
+            <ZingLogo size={32} />
             <span style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
           </Link>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">

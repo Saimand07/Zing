@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fetchOrderBook, getMidPrice } from "@/lib/stellar";
 import { supabase } from "@/lib/supabase";
 import { GLSLHills } from "@/components/ui/glsl-hills";
+import { ZingLogo } from "@/components/ui/logo";
 
 async function getLiveData() {
   let midPrice: string | null = null;
@@ -55,7 +56,7 @@ export default async function HomePage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "40px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <img src="/logo.jpg" alt="ZING Logo" style={{ width: "32px", height: "32px", borderRadius: "10px", objectFit: "cover", boxShadow: "0 0 20px rgba(0, 229, 255, 0.4)" }} />
+            <ZingLogo size={32} />
             <span style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
           </div>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">
@@ -171,11 +172,14 @@ export default async function HomePage() {
               <p style={{ color: "#A1A1AA", fontSize: "1.2rem", lineHeight: 1.6, maxWidth: "500px" }}>Access deep liquidity via the Stellar DEX and our Soroban-powered Prediction Markets. Real-time TradingView charts and native wallet execution.</p>
             </div>
             
-            <div className="glass-card" style={{ padding: "64px", background: "url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop') center/cover", position: "relative" }}>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #050505, rgba(5,5,5,0.4))", borderRadius: "24px" }} />
-              <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <div className="glass-card" style={{ padding: "64px", background: "linear-gradient(135deg, rgba(255, 51, 102, 0.08) 0%, rgba(181, 52, 255, 0.05) 100%)", position: "relative", overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div style={{ position: "absolute", top: "-20%", right: "-20%", width: "250px", height: "250px", background: "radial-gradient(circle, rgba(255, 51, 102, 0.2) 0%, rgba(0,0,0,0) 70%)", filter: "blur(40px)" }} />
+              <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "rgba(255, 51, 102, 0.15)", border: "1px solid rgba(255, 51, 102, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "32px" }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FF3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+              </div>
+              <div>
                 <h3 style={{ fontSize: "2.5rem", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "16px" }}>LaunchZone</h3>
-                <p style={{ color: "#ccc", fontSize: "1.1rem", lineHeight: 1.6 }}>Deploy Stellar assets or Soroban smart tokens instantly with 1-click.</p>
+                <p style={{ color: "#A1A1AA", fontSize: "1.1rem", lineHeight: 1.6 }}>Deploy Stellar assets or Soroban smart tokens instantly with 1-click bonding curve liquidity.</p>
               </div>
             </div>
           </div>
@@ -213,12 +217,36 @@ export default async function HomePage() {
           
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
             {[
-              { title: "1. Sign Intent", desc: "User cryptographically signs their desired outcome (e.g. 'I want 100 USDC for my 500 XLM'). No gas required.", icon: "✍️" },
-              { title: "2. Solvers Compete", desc: "Institutional market makers compete in a decentralized Dutch Auction to fill your intent at the best price.", icon: "⚡" },
-              { title: "3. Atomic Settlement", desc: "The winning solver submits the transaction to the Stellar network, paying all gas fees on your behalf.", icon: "⛓️" }
+              {
+                title: "1. Sign Intent",
+                desc: "User cryptographically signs their desired outcome (e.g. 'I want 100 USDC for my 500 XLM'). No gas required.",
+                icon: (
+                  <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(0, 229, 255, 0.1)", border: "1px solid rgba(0, 229, 255, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                  </div>
+                ),
+              },
+              {
+                title: "2. Solvers Compete",
+                desc: "Institutional market makers compete in a decentralized Dutch Auction to fill your intent at the best price.",
+                icon: (
+                  <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(181, 52, 255, 0.1)", border: "1px solid rgba(181, 52, 255, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#B534FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                  </div>
+                ),
+              },
+              {
+                title: "3. Atomic Settlement",
+                desc: "The winning solver submits the transaction to the Stellar network, paying all gas fees on your behalf.",
+                icon: (
+                  <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(0, 255, 136, 0.1)", border: "1px solid rgba(0, 255, 136, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00FF88" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                  </div>
+                ),
+              }
             ].map((step, i) => (
               <div key={i} className="glass-card" style={{ padding: "40px", textAlign: "center" }}>
-                <div style={{ fontSize: "3rem", marginBottom: "24px" }}>{step.icon}</div>
+                <div style={{ marginBottom: "24px" }}>{step.icon}</div>
                 <h3 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "16px" }}>{step.title}</h3>
                 <p style={{ color: "#A1A1AA", lineHeight: 1.6 }}>{step.desc}</p>
               </div>

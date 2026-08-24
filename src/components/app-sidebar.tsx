@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ZingLogo } from "@/components/ui/logo";
 import { 
   LayoutDashboard, 
   ArrowRightLeft, 
@@ -67,7 +68,7 @@ export default function AppSidebar() {
     }}>
       <div style={{ padding: "0 12px", marginBottom: "32px" }}>
         <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", padding: "8px 12px", borderRadius: "12px", transition: "background 0.2s" }} className="hover-bg">
-          <img src="/logo.jpg" alt="Zing Logo" style={{ width: "28px", height: "28px", borderRadius: "6px", objectFit: "cover", boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)" }} />
+          <ZingLogo size={28} />
           <span style={{ fontSize: "22px", fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Zing</span>
         </Link>
       </div>
