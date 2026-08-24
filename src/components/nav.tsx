@@ -16,7 +16,8 @@ import {
   ExternalLink, 
   ChevronDown,
   ShieldCheck,
-  Activity
+  Activity,
+  Menu
 } from "lucide-react";
 
 export default function Nav() {
@@ -103,8 +104,15 @@ export default function Nav() {
         justifyContent: "space-between",
         padding: "0 24px",
       }}>
-        {/* Left Search Bar */}
+        {/* Left Side: Mobile Menu & Search */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: 1, maxWidth: "480px" }}>
+          <button
+            onClick={() => window.dispatchEvent(new Event("toggleMobileMenu"))}
+            className="md:hidden p-2 -ml-2 text-zinc-400 hover:text-white flex-shrink-0"
+            style={{ background: "transparent", border: "none", cursor: "pointer" }}
+          >
+            <Menu size={20} />
+          </button>
           <div ref={searchRef} style={{ position: "relative", width: "100%" }}>
             <div style={{
               display: "flex",
@@ -196,7 +204,7 @@ export default function Nav() {
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           
           {/* Network Selector */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.03)", padding: "6px 12px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="hidden md:flex" style={{ alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.03)", padding: "6px 12px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.05)" }}>
             <Rocket size={14} color="#F59E0B" />
             <span style={{ fontSize: "12px", fontWeight: 600, color: "#fff" }}>Stellar Testnet</span>
           </div>

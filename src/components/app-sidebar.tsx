@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -14,11 +14,35 @@ import {
   Settings,
   Trophy,
   Code,
-  User
+  User,
+  X,
+  BarChart2,
+  ShieldAlert
 } from "lucide-react";
+import { useAuth } from "./auth-provider";
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsOpen(prev => !prev);
+    const handleClose = () => setIsOpen(false);
+    
+    window.addEventListener("toggleMobileMenu", handleToggle);
+    window.addEventListener("closeMobileMenu", handleClose);
+    
+    return () => {
+      window.removeEventListener("toggleMobileMenu", handleToggle);
+      window.removeEventListener("closeMobileMenu", handleClose);
+    };
+  }, []);
+
+  // Close sidebar on mobile when path changes
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   // Do not render sidebar on landing page
   if (pathname === "/") return null;
@@ -28,26 +52,23 @@ export default function AppSidebar() {
     return (
       <Link 
         href={disabled ? "#" : href}
-        style={{
-          display: "flex", alignItems: "center", gap: "12px",
-          padding: "10px 12px", borderRadius: "8px",
-          color: isActive ? "#fff" : (disabled ? "#52525B" : "#A1A1AA"),
-          background: isActive ? "rgba(255,255,255,0.05)" : "transparent",
-          textDecoration: "none", fontSize: "14px", fontWeight: 500,
-          cursor: disabled ? "not-allowed" : "pointer",
-          transition: "all 0.2s"
-        }}
-        className={!disabled ? "sidebar-hover" : ""}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+          isActive 
+            ? "bg-white/5 text-white" 
+            : disabled 
+              ? "text-zinc-600 cursor-not-allowed" 
+              : "text-zinc-400 hover:bg-white/5 hover:text-white"
+        }`}
       >
-        <Icon size={18} color={isActive ? "#3B82F6" : (disabled ? "#52525B" : "#71717A")} />
-        <span style={{ flex: 1 }}>{label}</span>
+        <Icon size={18} className={isActive ? "text-blue-500" : disabled ? "text-zinc-600" : "text-zinc-500"} />
+        <span className="flex-1">{label}</span>
         {badge && (
-          <span style={{ background: "#3B82F6", color: "#fff", fontSize: "10px", padding: "2px 6px", borderRadius: "4px", fontWeight: 700 }}>
+          <span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
             {badge}
           </span>
         )}
         {disabled && (
-          <span style={{ background: "#27272A", color: "#A1A1AA", fontSize: "10px", padding: "2px 6px", borderRadius: "4px" }}>
+          <span className="bg-zinc-800 text-zinc-400 text-[10px] px-1.5 py-0.5 rounded">
             SOON
           </span>
         )}
@@ -55,59 +76,78 @@ export default function AppSidebar() {
     );
   };
 
-  return (
-    <aside style={{
-      width: "260px",
-      height: "100vh",
-      position: "sticky",
-      top: 0,
-      background: "rgba(9, 9, 11, 0.5)", backdropFilter: "blur(12px)",
-      borderRight: "1px solid rgba(255,255,255,0.05)",
-      display: "flex",
-      flexDirection: "column",
-      padding: "24px 16px"
-    }}>
-      <div style={{ padding: "0 12px", marginBottom: "32px" }}>
-        <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", padding: "8px 12px", borderRadius: "12px", transition: "background 0.2s" }} className="hover-bg">
-          <img src="/logo.jpg" alt="Zing Logo" style={{ width: "28px", height: "28px", borderRadius: "6px", objectFit: "cover", boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)" }} />
-          <span style={{ fontSize: "22px", fontWeight: 800, color: "#fff", letterSpacing: "-0.5px" }}>Zing</span>
+  const SidebarContent = () => (
+    <>
+      <div className="flex items-center justify-between px-3 mb-8">
+        <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-white/5">
+          <img src="/logo.jpg" alt="Zing Logo" className="w-7 h-7 rounded-md object-cover shadow-[0_4px_12px_rgba(59,130,246,0.4)]" />
+          <span className="text-[22px] font-extrabold text-white tracking-tight">Zing</span>
         </Link>
+        {/* Mobile close button */}
+        <button 
+          onClick={() => setIsOpen(false)}
+          className="md:hidden p-2 text-zinc-400 hover:text-white"
+        >
+          <X size={20} />
+        </button>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", padding: "12px 12px 4px 12px", letterSpacing: "0.05em" }}>Menu</div>
+      <div className="flex flex-col gap-1 flex-1 overflow-y-auto scrollbar-hide">
+        <div className="text-[11px] font-bold text-zinc-500 uppercase px-3 pt-3 pb-1 tracking-wider">Menu</div>
         <NavItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
+        <NavItem href="/analytics" icon={BarChart2} label="Analytics" />
         <NavItem href="/trade" icon={ArrowRightLeft} label="Trade (Spot)" />
         <NavItem href="/trade/predictions" icon={TrendingUp} label="Prediction Markets" badge="HOT" />
         <NavItem href="/perps" icon={ArrowRightLeft} label="Perps & Futures" disabled />
         <NavItem href="/launch" icon={Rocket} label="LaunchZone" />
         {pathname.startsWith("/launch") && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginLeft: "28px", marginTop: "-2px", marginBottom: "8px" }}>
-            <Link href="/launch" style={{ color: pathname === "/launch" ? "#fff" : "#71717A", fontSize: "13px", textDecoration: "none", padding: "6px 12px", borderRadius: "6px", background: pathname === "/launch" ? "rgba(255,255,255,0.05)" : "transparent", transition: "all 0.2s" }} className="sidebar-hover-text">LaunchBoard</Link>
-            <Link href="/launch/create" style={{ color: pathname === "/launch/create" ? "#fff" : "#71717A", fontSize: "13px", textDecoration: "none", padding: "6px 12px", borderRadius: "6px", background: pathname === "/launch/create" ? "rgba(255,255,255,0.05)" : "transparent", transition: "all 0.2s" }} className="sidebar-hover-text">Launch New Token</Link>
+          <div className="flex flex-col gap-1 ml-7 -mt-0.5 mb-2">
+            <Link href="/launch" className={`text-[13px] px-3 py-1.5 rounded-md transition-all ${pathname === "/launch" ? "text-white bg-white/5" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}>LaunchBoard</Link>
+            <Link href="/launch/create" className={`text-[13px] px-3 py-1.5 rounded-md transition-all ${pathname === "/launch/create" ? "text-white bg-white/5" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}>Launch New Token</Link>
           </div>
         )}
         <NavItem href="/nft" icon={ImageIcon} label="NFT" disabled />
         
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", padding: "24px 12px 4px 12px", letterSpacing: "0.05em" }}>Community</div>
+        <div className="text-[11px] font-bold text-zinc-500 uppercase px-3 pt-6 pb-1 tracking-wider">Community</div>
         <NavItem href="/social-booster" icon={Users} label="Social Booster" />
         <NavItem href="/competitions" icon={Trophy} label="Competitions" />
 
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", padding: "24px 12px 4px 12px", letterSpacing: "0.05em" }}>Developers</div>
+        <div className="text-[11px] font-bold text-zinc-500 uppercase px-3 pt-6 pb-1 tracking-wider">Developers</div>
         <NavItem href="/contracts" icon={Code} label="Smart Contracts" />
       </div>
 
-      <div style={{ marginTop: "auto", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div className="mt-auto border-t border-white/5 pt-4 flex flex-col gap-1">
         <NavItem href="/profile" icon={User} label="User Profile" />
         <NavItem href="/wallet" icon={Wallet} label="My Wallet" />
         <NavItem href="/settings" icon={Settings} label="Settings" />
+        {user?.email === "rajdivyanshu86@gmail.com" && (
+          <NavItem href="/admin" icon={ShieldAlert} label="Admin Console" />
+        )}
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile Overlay Background */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
       
-      <style dangerouslySetInnerHTML={{__html: `
-        .sidebar-hover:hover { background: rgba(255,255,255,0.03) !important; color: #fff !important; }
-        .sidebar-hover:hover svg { color: #fff !important; }
-        .sidebar-hover-text:hover { color: #fff !important; }
-      `}} />
-    </aside>
+      {/* Sidebar */}
+      <aside className={`
+        fixed md:sticky top-0 left-0 z-50
+        w-[260px] h-[100dvh]
+        bg-zinc-950/80 backdrop-blur-xl border-r border-white/5
+        flex flex-col py-6 px-4
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}>
+        <SidebarContent />
+      </aside>
+    </>
   );
 }
