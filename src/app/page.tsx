@@ -158,11 +158,11 @@ export default async function HomePage() {
       <section id="ecosystem" style={{ padding: "120px 24px", position: "relative", zIndex: 1 }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "80px" }}>
-            <h2 className="text-gradient" style={{ fontSize: "4rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>Everything you need.</h2>
+            <h2 className="text-gradient" style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>Everything you need.</h2>
             <p style={{ color: "#A1A1AA", fontSize: "1.3rem", maxWidth: "600px", margin: "0 auto" }}>Trade, Launch, and Grow with enterprise-grade infrastructure built for the retail trader.</p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "24px", marginBottom: "24px" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6 mb-6">
             <div className="glass-card" style={{ padding: "64px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
               <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(0, 119, 255, 0.2))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "32px", border: "1px solid rgba(0, 229, 255, 0.3)" }}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon><line x1="12" y1="22" x2="12" y2="15.5"></line><polyline points="22 8.5 12 15.5 2 8.5"></polyline><polyline points="2 15.5 12 8.5 22 15.5"></polyline><line x1="12" y1="2" x2="12" y2="8.5"></line></svg>
@@ -183,7 +183,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "24px" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-6">
             <div className="glass-card" style={{ padding: "64px" }}>
                <h3 style={{ fontSize: "2.5rem", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "16px" }}>Social Booster</h3>
                <p style={{ color: "#A1A1AA", fontSize: "1.1rem", lineHeight: 1.6 }}>Grow your community through gamified, AI-scored mindshare quests on X.</p>
@@ -208,13 +208,13 @@ export default async function HomePage() {
       <section style={{ padding: "120px 24px", position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "80px" }}>
-            <h2 style={{ fontSize: "3rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>DeFi 2.0: The Intent Engine</h2>
+            <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>DeFi 2.0: The Intent Engine</h2>
             <p style={{ color: "#A1A1AA", fontSize: "1.2rem", maxWidth: "700px", margin: "0 auto" }}>
               Stop worrying about slippage, MEV attacks, and gas fees. Zing's Soroban architecture lets you simply declare what you want, and an off-chain network of solvers competes to give you the best price.
             </p>
           </div>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 title: "1. Sign Intent",
@@ -256,9 +256,9 @@ export default async function HomePage() {
 
       {/* ── Security & Audits ── */}
       <section style={{ padding: "120px 24px", position: "relative", zIndex: 1, background: "rgba(0,0,0,0.3)" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "64px", alignItems: "center" }}>
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 style={{ fontSize: "3rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>Bank-Grade Security</h2>
+            <h2 style={{ fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "24px" }}>Bank-Grade Security</h2>
             <p style={{ color: "#A1A1AA", fontSize: "1.2rem", lineHeight: 1.6, marginBottom: "32px" }}>
               Zing is built on Soroban's advanced <code>require_auth</code> framework. Every intent is strictly bounded by time and price, guaranteeing mathematical certainty over your trades.
             </p>
@@ -289,22 +289,22 @@ export default async function HomePage() {
       </section>
 
       {/* ── Call to Action ── */}
-      <section style={{ padding: "120px 24px", position: "relative", zIndex: 1, textAlign: "center" }}>
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, rgba(0,0,0,0) 70%)", filter: "blur(60px)", zIndex: -1 }} />
-        <h2 style={{ fontSize: "4rem", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "32px", color: "#fff" }}>Ready to upgrade your trading?</h2>
-        <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "12px", padding: "20px 48px", fontSize: "1.2rem", borderRadius: "100px", textDecoration: "none", boxShadow: "0 0 40px rgba(0, 229, 255, 0.3)" }}>
+      <section style={{ padding: "80px 16px", position: "relative", zIndex: 1, textAlign: "center" }}>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "100%", maxWidth: "600px", height: "600px", background: "radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, rgba(0,0,0,0) 70%)", filter: "blur(60px)", zIndex: -1 }} />
+        <h2 style={{ fontSize: "clamp(2rem, 6vw, 4rem)", fontWeight: 800, letterSpacing: "-0.04em", marginBottom: "32px", color: "#fff" }}>Ready to upgrade your trading?</h2>
+        <Link href="/dashboard" className="btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "12px", padding: "16px 32px", fontSize: "1.1rem", borderRadius: "100px", textDecoration: "none", boxShadow: "0 0 40px rgba(0, 229, 255, 0.3)" }}>
           Launch Zing OS
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
         </Link>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="glass" style={{ padding: "48px 24px", position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)", borderRadius: "0" }}>
-        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <footer className="glass" style={{ padding: "32px 24px", position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.05)", borderRadius: "0" }}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>
             ZING
           </div>
-          <div style={{ display: "flex", gap: "32px" }}>
+          <div style={{ display: "flex", gap: "24px" }}>
             <Link href="/dashboard" className="nav-link">Launch App</Link>
             <Link href="#" className="nav-link">Documentation</Link>
           </div>
