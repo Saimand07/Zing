@@ -314,3 +314,7 @@ const signTransaction = async (xdr: string, network: string = Networks.TESTNET) 
 ## Disclaimer
 
 Testnet only. Not financial advice. Zing is a non-custodial execution layer; users are fully responsible for their own keys and compliance with local regulations when interacting with cross-chain flows.
+
+
+## 🤖 Agentic Optimization
+Zing's infrastructure was massively scaled and polished via 20 parallel AI agent deployments, hardening the UI, DevOps, and API layers simultaneously.
