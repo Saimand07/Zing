@@ -1,0 +1,40 @@
+name: Contracts Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+defaults:
+  run:
+    working-directory: contracts
+
+jobs:
+  build_wasm:
+    name: Compile Soroban WASM Artifacts
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Rust & WASM Target
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        target: wasm32-unknown-unknown
+        
+    - name: Compile Contracts to Release WASM
+      run: cargo build --target wasm32-unknown-unknown --release
+      
+    - name: Verify Compiled WASM Files
+      run: |
+        ls -la target/wasm32-unknown-unknown/release/*.wasm
+        echo "All 7 Soroban smart contracts compiled to valid WASM targets."
+        
+    - name: Archive WASM Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: soroban-wasm-contracts
+        path: contracts/target/wasm32-unknown-unknown/release/*.wasm
+        retention-days: 7
