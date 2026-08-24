@@ -13,11 +13,6 @@ if (!isConfigured && typeof window === "undefined") {
   );
 }
 
-/**
- * Returns a configured Supabase client, or null if env vars are missing.
- * All callers must handle the null case — they should return empty data
- * with an appropriate message.
- */
 function maybeCreateClient(): SupabaseClient | null {
   if (!isConfigured) return null;
   return createClient(url, key);
@@ -27,20 +22,35 @@ const _client = maybeCreateClient();
 
 /**
  * Supabase client proxy.
- * When Supabase is not configured, all queries return `{ data: null, error: { message: 'Supabase not configured' }, count: null }`.
+ * When Supabase is not configured, all DB and auth calls return safe empty values
+ * so the app never crashes when env vars are missing.
  */
 export const supabase = _client ?? createNoOpClient();
 
 function createNoOpClient() {
-  const noOp = {
-    from: () => ({
-      select: () => ({
-        order:  () => ({ limit: () => Promise.resolve({ data: null, error: { message: "Supabase not configured — set env vars" }, count: null }) }),
-        limit:  () => Promise.resolve({ data: null, error: { message: "Supabase not configured — set env vars" }, count: null }),
-        eq:     () => ({ order: () => ({ limit: () => Promise.resolve({ data: null, error: null, count: null }) }) }),
-      }),
-      insert: () => Promise.resolve({ data: null, error: { message: "Supabase not configured — set env vars" } }),
-    }),
+  const noOpPromise = () => Promise.resolve({ data: null, error: { message: "Supabase not configured — set env vars" }, count: null });
+  const noOpChain: any = {
+    select: () => noOpChain,
+    order: () => noOpChain,
+    limit: () => noOpPromise(),
+    eq: () => noOpChain,
+    single: () => noOpPromise(),
+    insert: () => noOpPromise(),
+    upsert: () => noOpPromise(),
+    update: () => noOpChain,
   };
+
+  const noOp: any = {
+    from: () => noOpChain,
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword: () => Promise.resolve({ data: null, error: { message: "Supabase not configured" } }),
+      signUp: () => Promise.resolve({ data: null, error: { message: "Supabase not configured" } }),
+      signOut: () => Promise.resolve({ error: null }),
+      signInWithOAuth: () => Promise.resolve({ data: null, error: null }),
+    },
+  };
+
   return noOp as unknown as SupabaseClient;
 }

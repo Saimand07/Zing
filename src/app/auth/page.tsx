@@ -20,7 +20,7 @@ import {
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user, profile, isAuthenticated, signInWithEmail, signUpWithEmail, loginWithWalletAddress } = useAuth();
+  const { user, profile, isAuthenticated, loading: authLoading, signInWithEmail, signUpWithEmail, loginWithWalletAddress } = useAuth();
   const { pubKey, openSidebar } = useWallet();
   const { showToast } = useToast();
 
@@ -30,7 +30,17 @@ export default function AuthPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // If already authenticated
+  // Wait for auth hydration before rendering anything
+  if (authLoading) {
+    return (
+      <div style={{ maxWidth: "480px", margin: "80px auto", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "200px" }}>
+        <div style={{ width: "32px", height: "32px", border: "2px solid rgba(59,130,246,0.3)", borderTop: "2px solid #3B82F6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <style dangerouslySetInnerHTML={{__html: `@keyframes spin { to { transform: rotate(360deg); } }`}} />
+      </div>
+    );
+  }
+
+  // Already authenticated — redirect prompt
   if (isAuthenticated && profile) {
     return (
       <div style={{ maxWidth: "540px", margin: "80px auto", padding: "32px", background: "rgba(17, 17, 19, 0.5)", backdropFilter: "blur(12px)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", textAlign: "center", color: "#fff" }}>
