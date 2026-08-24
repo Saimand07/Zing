@@ -10,6 +10,7 @@ Trade with Zero Gas · Predict On-Chain · Launch Tokens · Built on Stellar Tes
 [![Network](https://img.shields.io/badge/Network-Stellar%20Testnet-0ea5e9?style=flat-square)](https://stellar.org)
 [![Soroban](https://img.shields.io/badge/Contracts-Soroban-8b5cf6?style=flat-square)](https://soroban.stellar.org)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016-black?style=flat-square)](https://nextjs.org)
+[![Feedback Form](https://img.shields.io/badge/User%20Feedback-Google%20Sheets-22c55e?style=flat-square)](https://docs.google.com/spreadsheets/d/e/2PACX-1vTheaSg2eZ36h2mwmL4cRIanqPRUaPg10RCY-TeEJbMbvp3axvJr2xJukN3zZAJB4ZKmf8Mg7P6zfhq/pubhtml)
 [![CI](https://img.shields.io/badge/CI-Passing-22c55e?style=flat-square)](#)
 
 </div>
@@ -178,6 +179,12 @@ All contracts are written in Rust, compiled to `wasm32-unknown-unknown`, and dep
 ### Dashboard
 ![Dashboard](public/Screenshot/Dashboard.png)
 > Ecosystem analytics and market overview — trending assets, Fear & Greed Index, global market cap, and live project feed.
+
+---
+
+### Analytics Dashboard
+![Analytics Dashboard](public/Screenshot/Analytical%20Dashboard.png)
+> Real-time on-chain activity, trading volume, prediction market metrics, and live feed for the Zing ecosystem.
 
 ---
 
