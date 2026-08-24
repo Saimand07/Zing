@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useWallet } from "@/components/wallet-provider";
 import { useToast } from "@/components/toast-provider";
 import { TradingChart } from "@/components/trading-chart";
+import { PredictionVoteChart } from "@/components/prediction-vote-chart";
 import { getBalances } from "@/lib/stellar-trade";
 import { 
   buildPredictionBetTx, 
@@ -150,6 +151,7 @@ function PredictionsTerminal() {
   const [betAmountXLM, setBetAmountXLM] = useState("50");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<"MARKETS" | "POSITIONS">("MARKETS");
+  const [chartType, setChartType] = useState<"PROBABILITY" | "ASSET">("PROBABILITY");
   
   // Last transaction status
   const [lastTxHash, setLastTxHash] = useState<string | null>(null);
@@ -810,23 +812,63 @@ function PredictionsTerminal() {
                   </div>
                 </div>
 
-                {/* ── Real Live Interactive Chart Beside the Contest ── */}
-                <div style={{ borderRadius: "8px", overflow: "hidden", background: "rgba(9, 9, 11, 0.5)", border: "1px solid #27272A", padding: "14px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <BarChart2 size={14} color="#3B82F6" />
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#fff" }}>
-                        Real-Time Asset Market Index
+                {/* ── Real Live Interactive Vote Coverage & Asset Chart ── */}
+                <div style={{ borderRadius: "8px", overflow: "hidden", background: "rgba(9, 9, 11, 0.5)", border: "1px solid #27272A", padding: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <BarChart2 size={15} color="#3B82F6" />
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>
+                        {chartType === "PROBABILITY" ? "Live Vote Coverage & Probability Curve" : "Real-Time Asset Market Index"}
                       </span>
                     </div>
-                    <span style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "4px", background: "rgba(59, 130, 246, 0.1)", color: "#3B82F6", fontWeight: 600 }}>
-                      {currentMarket.chartSymbol} Live Feed
-                    </span>
+
+                    {/* Chart Mode Toggle */}
+                    <div style={{ display: "flex", background: "rgba(17, 17, 19, 0.8)", borderRadius: "6px", border: "1px solid #27272A", padding: "2px" }}>
+                      <button
+                        onClick={() => setChartType("PROBABILITY")}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          background: chartType === "PROBABILITY" ? "#27272A" : "transparent",
+                          color: chartType === "PROBABILITY" ? "#10B981" : "#71717A",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          border: "none",
+                          cursor: "pointer"
+                        }}
+                      >
+                        Live Votes %
+                      </button>
+                      <button
+                        onClick={() => setChartType("ASSET")}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: "4px",
+                          background: chartType === "ASSET" ? "#27272A" : "transparent",
+                          color: chartType === "ASSET" ? "#3B82F6" : "#71717A",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          border: "none",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {currentMarket.chartSymbol} Candlestick
+                      </button>
+                    </div>
                   </div>
 
-                  <div style={{ height: "320px", width: "100%" }}>
-                    <TradingChart symbol={currentMarket.chartSymbol} />
-                  </div>
+                  {chartType === "PROBABILITY" ? (
+                    <PredictionVoteChart
+                      marketId={currentMarket.id}
+                      yesProb={currentMarket.yesProb}
+                      noProb={currentMarket.noProb}
+                      totalVolume={currentMarket.volume24hXLM}
+                    />
+                  ) : (
+                    <div style={{ height: "300px", width: "100%" }}>
+                      <TradingChart symbol={currentMarket.chartSymbol} />
+                    </div>
+                  )}
                 </div>
               </div>
 
