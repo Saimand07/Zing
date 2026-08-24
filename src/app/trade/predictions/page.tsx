@@ -269,7 +269,6 @@ function PredictionsTerminal() {
     try {
       showToast("Building on-chain prediction transaction...", "info");
       
-      // 1. Build real transaction XDR
       const unsignedXdr = await buildPredictionBetTx(
         pubKey,
         currentMarket.id,
@@ -277,17 +276,14 @@ function PredictionsTerminal() {
         numAmount.toString()
       );
 
-      // 2. Request user signature from connected Stellar wallet
       showToast("Please sign the transaction in your Stellar wallet...", "info");
       const signedXdr = await signTransaction(unsignedXdr);
 
-      // 3. Submit directly to Stellar Testnet
       showToast("Submitting transaction to Stellar Testnet...", "info");
       const txHash = await submitStellarTx(signedXdr);
 
       setLastTxHash(txHash);
 
-      // 4. Update market pool & odds
       setMarkets(prev => prev.map(m => {
         if (m.id === currentMarket.id) {
           const shift = selectedSide === "YES" ? 1 : -1;
@@ -304,7 +300,6 @@ function PredictionsTerminal() {
         return m;
       }));
 
-      // 5. Add to user positions
       setUserPositions(prev => [
         {
           marketId: currentMarket.id,
@@ -318,7 +313,6 @@ function PredictionsTerminal() {
         ...prev
       ]);
 
-      // 6. Add to live activity tape
       setRecentBets(prev => [
         {
           wallet: `${pubKey.slice(0, 4)}...${pubKey.slice(-4)}`,
@@ -363,18 +357,15 @@ function PredictionsTerminal() {
     try {
       showToast("Building on-chain contest initialization transaction...", "info");
 
-      // 1. Build real transaction XDR
       const unsignedXdr = await buildCreateContestTx(
         pubKey,
         newQuestion,
         initPool.toString()
       );
 
-      // 2. Request user signature
       showToast("Please sign the deployment transaction in your wallet...", "info");
       const signedXdr = await signTransaction(unsignedXdr);
 
-      // 3. Submit to Stellar Testnet
       showToast("Deploying contest to Stellar Testnet...", "info");
       const txHash = await submitStellarTx(signedXdr);
 
@@ -419,28 +410,35 @@ function PredictionsTerminal() {
     setUserPositions(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // Consistent card style identical to Dashboard / Trade terminal
+  const dashboardCardStyle = {
+    background: "rgba(17, 17, 19, 0.5)",
+    backdropFilter: "blur(12px)",
+    border: "1px solid rgba(255, 255, 255, 0.05)",
+    borderRadius: "12px",
+  };
+
   return (
-    <div style={{ maxWidth: "1500px", margin: "0 auto", padding: "32px 24px 80px 24px", color: "#fff", fontFamily: "var(--font-geist-sans)" }}>
+    <div style={{ maxWidth: "1500px", margin: "0 auto", padding: "24px", color: "#fff", fontFamily: "var(--font-geist-sans)" }}>
       
       {/* ── Top Header Banner ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "28px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "24px", flexWrap: "wrap", gap: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
         <div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 14px", borderRadius: "100px", background: "rgba(0, 229, 255, 0.1)", border: "1px solid rgba(0, 229, 255, 0.3)", color: "#00E5FF", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "12px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "4px 12px", borderRadius: "100px", background: "rgba(0, 229, 255, 0.1)", border: "1px solid rgba(0, 229, 255, 0.3)", color: "#00E5FF", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00E5FF", boxShadow: "0 0 8px #00E5FF" }} />
             Live On-Chain Soroban Protocol
           </div>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 800, letterSpacing: "-0.04em", margin: "0 0 8px 0" }}>
+          <h1 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.5px", margin: "0 0 6px 0" }}>
             Decentralized Prediction Contests
           </h1>
-          <p style={{ color: "#A1A1AA", fontSize: "1.1rem", margin: 0 }}>
+          <p style={{ color: "#A1A1AA", fontSize: "14px", margin: 0 }}>
             Vote and stake real <strong>XLM</strong> with verifiable on-chain settlement on Stellar Soroban contracts.
           </p>
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           
-          {/* Create Contest Button */}
           <button
             onClick={() => {
               if (!pubKey) {
@@ -451,34 +449,33 @@ function PredictionsTerminal() {
               }
             }}
             style={{
-              padding: "11px 22px",
+              padding: "9px 18px",
               borderRadius: "8px",
-              background: "linear-gradient(135deg, #00E5FF, #0077FF)",
-              color: "#000",
-              fontWeight: 800,
-              fontSize: "14px",
+              background: "#3B82F6",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "13px",
               border: "none",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 0 25px rgba(0, 229, 255, 0.35)",
               transition: "all 0.2s"
             }}
           >
-            <PlusCircle size={18} />
+            <PlusCircle size={16} />
             Create Contest
           </button>
 
           <button
             onClick={() => setActiveTab("MARKETS")}
             style={{
-              padding: "10px 18px",
+              padding: "9px 16px",
               borderRadius: "8px",
               background: activeTab === "MARKETS" ? "#27272A" : "rgba(255,255,255,0.03)",
               color: activeTab === "MARKETS" ? "#fff" : "#A1A1AA",
-              fontWeight: 700,
-              fontSize: "14px",
+              fontWeight: 600,
+              fontSize: "13px",
               border: `1px solid ${activeTab === "MARKETS" ? "#52525B" : "rgba(255,255,255,0.06)"}`,
               cursor: "pointer"
             }}
@@ -489,12 +486,12 @@ function PredictionsTerminal() {
           <button
             onClick={() => setActiveTab("POSITIONS")}
             style={{
-              padding: "10px 18px",
+              padding: "9px 16px",
               borderRadius: "8px",
               background: activeTab === "POSITIONS" ? "#27272A" : "rgba(255,255,255,0.03)",
               color: activeTab === "POSITIONS" ? "#fff" : "#A1A1AA",
-              fontWeight: 700,
-              fontSize: "14px",
+              fontWeight: 600,
+              fontSize: "13px",
               border: `1px solid ${activeTab === "POSITIONS" ? "#52525B" : "rgba(255,255,255,0.06)"}`,
               cursor: "pointer",
               display: "flex",
@@ -504,7 +501,7 @@ function PredictionsTerminal() {
           >
             My Positions
             {userPositions.some(p => p.canClaim) && (
-              <span style={{ padding: "2px 6px", background: "#00FF88", color: "#000", fontSize: "10px", borderRadius: "4px", fontWeight: 800 }}>
+              <span style={{ padding: "2px 6px", background: "#10B981", color: "#000", fontSize: "10px", borderRadius: "4px", fontWeight: 700 }}>
                 1 Claimable
               </span>
             )}
@@ -516,19 +513,19 @@ function PredictionsTerminal() {
       {lastTxHash && (
         <div
           style={{
+            ...dashboardCardStyle,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "14px 20px",
-            borderRadius: "10px",
-            background: "rgba(0, 255, 136, 0.1)",
-            border: "1px solid rgba(0, 255, 136, 0.3)",
+            padding: "12px 18px",
+            background: "rgba(16, 185, 129, 0.1)",
+            border: "1px solid rgba(16, 185, 129, 0.3)",
             marginBottom: "20px"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <CheckCircle2 size={18} color="#00FF88" />
-            <span style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>
+            <CheckCircle2 size={16} color="#10B981" />
+            <span style={{ fontSize: "13px", fontWeight: 500, color: "#fff" }}>
               Transaction mined on Stellar Testnet!
             </span>
           </div>
@@ -540,14 +537,14 @@ function PredictionsTerminal() {
               display: "flex",
               alignItems: "center",
               gap: "6px",
-              color: "#00FF88",
-              fontSize: "13px",
-              fontWeight: 700,
+              color: "#10B981",
+              fontSize: "12px",
+              fontWeight: 600,
               textDecoration: "none"
             }}
           >
             View on StellarExpert
-            <ExternalLink size={14} />
+            <ExternalLink size={12} />
           </a>
         </div>
       )}
@@ -556,25 +553,25 @@ function PredictionsTerminal() {
       {!pubKey && (
         <div
           style={{
+            ...dashboardCardStyle,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "16px 24px",
-            borderRadius: "12px",
-            background: "linear-gradient(90deg, rgba(255, 51, 102, 0.15) 0%, rgba(181, 52, 255, 0.1) 100%)",
-            border: "1px solid rgba(255, 51, 102, 0.3)",
-            marginBottom: "28px"
+            padding: "14px 20px",
+            background: "rgba(17, 17, 19, 0.6)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            marginBottom: "24px"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(255, 51, 102, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FF3366" }}>
-              <ShieldAlert size={20} />
+            <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(239, 68, 68, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "#EF4444" }}>
+              <ShieldAlert size={18} />
             </div>
             <div>
-              <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#fff" }}>
                 Wallet Connection Mandatory for Voting
               </div>
-              <div style={{ fontSize: "13px", color: "#A1A1AA" }}>
+              <div style={{ fontSize: "12px", color: "#A1A1AA" }}>
                 Each vote stakes real XLM on the Soroban smart contract. Connect your Stellar wallet to participate.
               </div>
             </div>
@@ -582,31 +579,30 @@ function PredictionsTerminal() {
           <button
             onClick={openSidebar}
             style={{
-              padding: "10px 20px",
-              borderRadius: "8px",
-              background: "#FF3366",
+              padding: "8px 16px",
+              borderRadius: "6px",
+              background: "#EF4444",
               color: "#fff",
-              fontWeight: 700,
-              fontSize: "13px",
+              fontWeight: 600,
+              fontSize: "12px",
               border: "none",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              boxShadow: "0 0 15px rgba(255, 51, 102, 0.4)"
+              gap: "6px"
             }}
           >
-            <Wallet size={16} />
-            Connect Stellar Wallet
+            <Wallet size={14} />
+            Connect Wallet
           </button>
         </div>
       )}
 
       {activeTab === "POSITIONS" ? (
         /* ── Positions & Claim Widget ── */
-        <div className="glass-card" style={{ padding: "32px" }}>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "20px" }}>Active Stakes & Claims</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div style={{ ...dashboardCardStyle, padding: "24px" }}>
+          <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "16px", color: "#fff" }}>Active Stakes & Claims</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {userPositions.map((pos, idx) => (
               <div
                 key={idx}
@@ -614,17 +610,17 @@ function PredictionsTerminal() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "20px 24px",
-                  borderRadius: "12px",
-                  background: pos.canClaim ? "rgba(0, 255, 136, 0.05)" : "rgba(255,255,255,0.02)",
-                  border: `1px solid ${pos.canClaim ? "rgba(0, 255, 136, 0.3)" : "rgba(255,255,255,0.08)"}`
+                  padding: "16px 20px",
+                  borderRadius: "8px",
+                  background: pos.canClaim ? "rgba(16, 185, 129, 0.05)" : "rgba(9, 9, 11, 0.4)",
+                  border: `1px solid ${pos.canClaim ? "rgba(16, 185, 129, 0.3)" : "#27272A"}`
                 }}
               >
                 <div>
-                  <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "6px" }}>{pos.question}</div>
-                  <div style={{ display: "flex", gap: "16px", fontSize: "13px", color: "#A1A1AA" }}>
-                    <span>Vote: <strong style={{ color: pos.side === "YES" ? "#00FF88" : "#FF3366" }}>{pos.shares} {pos.side}</strong></span>
-                    <span>Staked: <strong>{pos.investedXLM} XLM</strong></span>
+                  <div style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "#fff" }}>{pos.question}</div>
+                  <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "#A1A1AA" }}>
+                    <span>Vote: <strong style={{ color: pos.side === "YES" ? "#10B981" : "#EF4444" }}>{pos.shares} {pos.side}</strong></span>
+                    <span>Staked: <strong style={{ color: "#fff" }}>{pos.investedXLM} XLM</strong></span>
                     <span>Current Value: <strong style={{ color: "#fff" }}>{pos.currentValueXLM} XLM</strong></span>
                   </div>
                 </div>
@@ -633,21 +629,20 @@ function PredictionsTerminal() {
                   <button
                     onClick={() => handleClaim(idx)}
                     style={{
-                      padding: "12px 24px",
-                      borderRadius: "8px",
-                      background: "linear-gradient(135deg, #00FF88, #00E5FF)",
+                      padding: "10px 20px",
+                      borderRadius: "6px",
+                      background: "#10B981",
                       color: "#000",
-                      fontWeight: 800,
-                      fontSize: "14px",
+                      fontWeight: 700,
+                      fontSize: "13px",
                       border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 0 20px rgba(0, 255, 136, 0.4)"
+                      cursor: "pointer"
                     }}
                   >
-                    Claim {pos.currentValueXLM} XLM Winnings
+                    Claim {pos.currentValueXLM} XLM
                   </button>
                 ) : (
-                  <span style={{ padding: "8px 16px", borderRadius: "6px", background: "rgba(255,255,255,0.05)", color: "#A1A1AA", fontSize: "13px" }}>
+                  <span style={{ padding: "6px 12px", borderRadius: "6px", background: "#27272A", color: "#A1A1AA", fontSize: "12px", fontWeight: 500 }}>
                     Awaiting Resolution
                   </span>
                 )}
@@ -659,19 +654,19 @@ function PredictionsTerminal() {
         /* ── Main Markets Terminal ── */
         <div>
           {/* Category Filter Pills */}
-          <div style={{ display: "flex", gap: "12px", overflowX: "auto", paddingBottom: "16px", marginBottom: "24px" }}>
+          <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "14px", marginBottom: "20px" }}>
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 style={{
-                  padding: "8px 18px",
-                  borderRadius: "100px",
-                  background: selectedCategory === cat ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.03)",
-                  border: `1px solid ${selectedCategory === cat ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.06)"}`,
-                  color: selectedCategory === cat ? "#fff" : "#A1A1AA",
-                  fontSize: "13px",
-                  fontWeight: 600,
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  background: selectedCategory === cat ? "rgba(255,255,255,0.08)" : "rgba(17, 17, 19, 0.5)",
+                  border: `1px solid ${selectedCategory === cat ? "#52525B" : "rgba(255,255,255,0.05)"}`,
+                  color: selectedCategory === cat ? "#fff" : "#71717A",
+                  fontSize: "12px",
+                  fontWeight: 500,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   transition: "all 0.2s"
@@ -682,15 +677,15 @@ function PredictionsTerminal() {
             ))}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "340px 1fr 380px", gap: "24px", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "320px 1fr 360px", gap: "20px", alignItems: "start" }}>
             
             {/* ── Left Sidebar: Contests Feed ── */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px" }}>
-                <span style={{ fontSize: "12px", fontWeight: 700, color: "#71717A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 4px", marginBottom: "2px" }}>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Active Contests ({filteredMarkets.length})
                 </span>
-                <span style={{ fontSize: "11px", color: "#00E5FF", fontWeight: 600 }}>Live Feed</span>
+                <span style={{ fontSize: "11px", color: "#3B82F6", fontWeight: 600 }}>Live</span>
               </div>
 
               {filteredMarkets.map((m) => {
@@ -699,41 +694,41 @@ function PredictionsTerminal() {
                   <div
                     key={m.id}
                     onClick={() => setSelectedMarketId(m.id)}
-                    className="glass-card"
                     style={{
-                      padding: "18px",
+                      ...dashboardCardStyle,
+                      padding: "16px",
                       cursor: "pointer",
-                      background: isSelected ? "rgba(0, 229, 255, 0.06)" : "rgba(255,255,255,0.02)",
-                      border: `1px solid ${isSelected ? "rgba(0, 229, 255, 0.4)" : "rgba(255,255,255,0.05)"}`,
+                      background: isSelected ? "rgba(24, 24, 27, 0.8)" : "rgba(17, 17, 19, 0.5)",
+                      border: `1px solid ${isSelected ? "#52525B" : "rgba(255,255,255,0.05)"}`,
                       transition: "all 0.2s"
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "11px", color: "#A1A1AA", fontWeight: 600, textTransform: "uppercase" }}>
+                      <span style={{ fontSize: "10px", color: "#71717A", fontWeight: 600, textTransform: "uppercase" }}>
                         {m.category}
                       </span>
-                      <span style={{ fontSize: "10px", color: "#71717A", fontFamily: "monospace" }}>
-                        by {m.creator}
+                      <span style={{ fontSize: "10px", color: "#52525B", fontFamily: "var(--font-geist-mono)" }}>
+                        {m.creator}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: "14px", fontWeight: 700, lineHeight: 1.4, marginBottom: "14px", color: "#fff" }}>
+                    <div style={{ fontSize: "13px", fontWeight: 600, lineHeight: 1.4, marginBottom: "12px", color: "#fff" }}>
                       {m.question}
                     </div>
 
                     {/* Probability Split Bar */}
-                    <div style={{ display: "flex", height: "6px", borderRadius: "3px", overflow: "hidden", marginBottom: "10px", background: "#18181B" }}>
-                      <div style={{ width: `${m.yesProb}%`, background: "#00FF88", transition: "width 0.4s ease" }} />
-                      <div style={{ width: `${m.noProb}%`, background: "#FF3366", transition: "width 0.4s ease" }} />
+                    <div style={{ display: "flex", height: "4px", borderRadius: "2px", overflow: "hidden", marginBottom: "8px", background: "#27272A" }}>
+                      <div style={{ width: `${m.yesProb}%`, background: "#10B981", transition: "width 0.4s ease" }} />
+                      <div style={{ width: `${m.noProb}%`, background: "#EF4444", transition: "width 0.4s ease" }} />
                     </div>
 
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", fontWeight: 700 }}>
-                      <span style={{ color: "#00FF88" }}>YES {m.yesProb}% ({(m.yesProb / 100).toFixed(2)} XLM)</span>
-                      <span style={{ color: "#FF3366" }}>NO {m.noProb}% ({(m.noProb / 100).toFixed(2)} XLM)</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 600 }}>
+                      <span style={{ color: "#10B981" }}>YES {m.yesProb}% ({(m.yesProb / 100).toFixed(2)} XLM)</span>
+                      <span style={{ color: "#EF4444" }}>NO {m.noProb}% ({(m.noProb / 100).toFixed(2)} XLM)</span>
                     </div>
 
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: "11px", color: "#71717A" }}>
-                      <span>24h Vol: {m.volume24hXLM.toLocaleString()} XLM</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: "11px", color: "#52525B" }}>
+                      <span>Vol: {m.volume24hXLM.toLocaleString()} XLM</span>
                       <span>Pool: {m.totalPoolXLM.toLocaleString()} XLM</span>
                     </div>
                   </div>
@@ -742,149 +737,147 @@ function PredictionsTerminal() {
             </div>
 
             {/* ── Center Area: Real Live Chart & Contest Breakdown ── */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               
-              <div className="glass-card" style={{ padding: "28px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
+              <div style={{ ...dashboardCardStyle, padding: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexWrap: "wrap", gap: "12px" }}>
                   <div>
-                    <span style={{ fontSize: "12px", color: "#00E5FF", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <span style={{ fontSize: "11px", color: "#3B82F6", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                       {currentMarket.category}
                     </span>
-                    <h2 style={{ fontSize: "1.6rem", fontWeight: 800, margin: "6px 0 10px 0", letterSpacing: "-0.02em" }}>
+                    <h2 style={{ fontSize: "1.4rem", fontWeight: 700, margin: "4px 0 8px 0", letterSpacing: "-0.3px", color: "#fff" }}>
                       {currentMarket.question}
                     </h2>
-                    <p style={{ color: "#A1A1AA", fontSize: "13px", margin: 0, lineHeight: 1.6, maxWidth: "650px" }}>
+                    <p style={{ color: "#71717A", fontSize: "13px", margin: 0, lineHeight: 1.5, maxWidth: "600px" }}>
                       {currentMarket.description}
                     </p>
                   </div>
 
                   {/* Countdown Box */}
-                  <div style={{ textAlign: "right", background: "rgba(0,0,0,0.4)", padding: "12px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-                    <div style={{ fontSize: "10px", color: "#71717A", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px", justifyContent: "flex-end" }}>
-                      <Clock size={12} />
-                      Resolution Countdown
+                  <div style={{ textAlign: "right", background: "rgba(9, 9, 11, 0.5)", padding: "10px 14px", borderRadius: "8px", border: "1px solid #27272A", flexShrink: 0 }}>
+                    <div style={{ fontSize: "10px", color: "#52525B", textTransform: "uppercase", fontWeight: 600, marginBottom: "2px", display: "flex", alignItems: "center", gap: "4px", justifyContent: "flex-end" }}>
+                      <Clock size={11} />
+                      Countdown
                     </div>
-                    <div style={{ fontSize: "16px", fontWeight: 800, color: "#00E5FF", fontFamily: "monospace" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#3B82F6", fontFamily: "var(--font-geist-mono)" }}>
                       {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
                     </div>
                   </div>
                 </div>
 
                 {/* Big Dynamic Odds Card */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
                   <div
                     onClick={() => setSelectedSide("YES")}
                     style={{
-                      padding: "20px",
-                      borderRadius: "12px",
-                      background: selectedSide === "YES" ? "rgba(0, 255, 136, 0.12)" : "rgba(255,255,255,0.02)",
-                      border: `2px solid ${selectedSide === "YES" ? "#00FF88" : "rgba(255,255,255,0.08)"}`,
+                      padding: "16px",
+                      borderRadius: "8px",
+                      background: selectedSide === "YES" ? "rgba(16, 185, 129, 0.1)" : "rgba(9, 9, 11, 0.5)",
+                      border: `1px solid ${selectedSide === "YES" ? "#10B981" : "#27272A"}`,
                       cursor: "pointer",
                       transition: "all 0.2s"
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <span style={{ fontSize: "18px", fontWeight: 800, color: "#00FF88" }}>VOTE YES</span>
-                      <span style={{ fontSize: "28px", fontWeight: 800, color: "#fff" }}>{currentMarket.yesProb}%</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 700, color: "#10B981" }}>VOTE YES</span>
+                      <span style={{ fontSize: "22px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-geist-mono)" }}>{currentMarket.yesProb}%</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#A1A1AA" }}>
-                      <span>Price: <strong>{(currentMarket.yesProb / 100).toFixed(2)} XLM</strong> / share</span>
-                      <span style={{ color: "#00FF88", fontWeight: 600 }}>+{(100 / (currentMarket.yesProb / 100) - 100).toFixed(0)}% Return</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#71717A" }}>
+                      <span>Price: <strong style={{ color: "#fff" }}>{(currentMarket.yesProb / 100).toFixed(2)} XLM</strong></span>
+                      <span style={{ color: "#10B981", fontWeight: 600 }}>+{(100 / (currentMarket.yesProb / 100) - 100).toFixed(0)}% Return</span>
                     </div>
                   </div>
 
                   <div
                     onClick={() => setSelectedSide("NO")}
                     style={{
-                      padding: "20px",
-                      borderRadius: "12px",
-                      background: selectedSide === "NO" ? "rgba(255, 51, 102, 0.12)" : "rgba(255,255,255,0.02)",
-                      border: `2px solid ${selectedSide === "NO" ? "#FF3366" : "rgba(255,255,255,0.08)"}`,
+                      padding: "16px",
+                      borderRadius: "8px",
+                      background: selectedSide === "NO" ? "rgba(239, 68, 68, 0.1)" : "rgba(9, 9, 11, 0.5)",
+                      border: `1px solid ${selectedSide === "NO" ? "#EF4444" : "#27272A"}`,
                       cursor: "pointer",
                       transition: "all 0.2s"
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                      <span style={{ fontSize: "18px", fontWeight: 800, color: "#FF3366" }}>VOTE NO</span>
-                      <span style={{ fontSize: "28px", fontWeight: 800, color: "#fff" }}>{currentMarket.noProb}%</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 700, color: "#EF4444" }}>VOTE NO</span>
+                      <span style={{ fontSize: "22px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-geist-mono)" }}>{currentMarket.noProb}%</span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: "#A1A1AA" }}>
-                      <span>Price: <strong>{(currentMarket.noProb / 100).toFixed(2)} XLM</strong> / share</span>
-                      <span style={{ color: "#FF3366", fontWeight: 600 }}>+{(100 / (currentMarket.noProb / 100) - 100).toFixed(0)}% Return</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#71717A" }}>
+                      <span>Price: <strong style={{ color: "#fff" }}>{(currentMarket.noProb / 100).toFixed(2)} XLM</strong></span>
+                      <span style={{ color: "#EF4444", fontWeight: 600 }}>+{(100 / (currentMarket.noProb / 100) - 100).toFixed(0)}% Return</span>
                     </div>
                   </div>
                 </div>
 
                 {/* ── Real Live Interactive Chart Beside the Contest ── */}
-                <div style={{ borderRadius: "12px", overflow: "hidden", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.06)", padding: "16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <BarChart2 size={16} color="#00E5FF" />
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>
-                        Real-Time Asset & Probability Market Index
+                <div style={{ borderRadius: "8px", overflow: "hidden", background: "rgba(9, 9, 11, 0.5)", border: "1px solid #27272A", padding: "14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <BarChart2 size={14} color="#3B82F6" />
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#fff" }}>
+                        Real-Time Asset Market Index
                       </span>
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                      <span style={{ fontSize: "11px", padding: "4px 8px", borderRadius: "4px", background: "rgba(0, 229, 255, 0.1)", color: "#00E5FF", fontWeight: 600 }}>
-                        {currentMarket.chartSymbol} Live Candlestick
-                      </span>
-                    </div>
+                    <span style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "4px", background: "rgba(59, 130, 246, 0.1)", color: "#3B82F6", fontWeight: 600 }}>
+                      {currentMarket.chartSymbol} Live Feed
+                    </span>
                   </div>
 
-                  <div style={{ height: "350px", width: "100%" }}>
+                  <div style={{ height: "320px", width: "100%" }}>
                     <TradingChart symbol={currentMarket.chartSymbol} />
                   </div>
                 </div>
               </div>
 
               {/* On-Chain Specs Banner */}
-              <div className="glass-card" style={{ padding: "18px 24px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", fontSize: "12px" }}>
+              <div style={{ ...dashboardCardStyle, padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "12px", fontSize: "12px" }}>
                 <div>
-                  <div style={{ color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>Soroban Contract</div>
+                  <div style={{ color: "#52525B", textTransform: "uppercase", fontWeight: 600 }}>Soroban Contract</div>
                   <a
                     href={`https://stellar.expert/explorer/testnet/contract/${currentMarket.contractId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: "#00E5FF", fontWeight: 700, fontFamily: "monospace", marginTop: "2px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
+                    style={{ color: "#3B82F6", fontWeight: 600, fontFamily: "var(--font-geist-mono)", marginTop: "2px", display: "inline-flex", alignItems: "center", gap: "4px", textDecoration: "none" }}
                   >
                     {currentMarket.contractId.slice(0, 8)}...
-                    <ExternalLink size={12} />
+                    <ExternalLink size={11} />
                   </a>
                 </div>
                 <div>
-                  <div style={{ color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>Total Pool</div>
-                  <div style={{ color: "#00FF88", fontWeight: 700, marginTop: "2px" }}>{currentMarket.totalPoolXLM.toLocaleString()} XLM</div>
+                  <div style={{ color: "#52525B", textTransform: "uppercase", fontWeight: 600 }}>Total Pool</div>
+                  <div style={{ color: "#10B981", fontWeight: 600, marginTop: "2px" }}>{currentMarket.totalPoolXLM.toLocaleString()} XLM</div>
                 </div>
                 <div>
-                  <div style={{ color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>24h Volume</div>
-                  <div style={{ color: "#00E5FF", fontWeight: 700, marginTop: "2px" }}>{currentMarket.volume24hXLM.toLocaleString()} XLM</div>
+                  <div style={{ color: "#52525B", textTransform: "uppercase", fontWeight: 600 }}>24h Volume</div>
+                  <div style={{ color: "#3B82F6", fontWeight: 600, marginTop: "2px" }}>{currentMarket.volume24hXLM.toLocaleString()} XLM</div>
                 </div>
                 <div>
-                  <div style={{ color: "#71717A", textTransform: "uppercase", fontWeight: 600 }}>Active Voters</div>
-                  <div style={{ color: "#fff", fontWeight: 700, marginTop: "2px" }}>{currentMarket.participants} Wallets</div>
+                  <div style={{ color: "#52525B", textTransform: "uppercase", fontWeight: 600 }}>Active Voters</div>
+                  <div style={{ color: "#fff", fontWeight: 600, marginTop: "2px" }}>{currentMarket.participants} Wallets</div>
                 </div>
               </div>
 
             </div>
 
             {/* ── Right Column: Interactive XLM Voting & Stake Slip ── */}
-            <div className="glass-card" style={{ padding: "28px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, margin: 0 }}>Stake Slip</h3>
-                <span style={{ fontSize: "12px", color: "#A1A1AA" }}>Currency: <strong style={{ color: "#00E5FF" }}>XLM</strong></span>
+            <div style={{ ...dashboardCardStyle, padding: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0, color: "#fff" }}>Stake Slip</h3>
+                <span style={{ fontSize: "12px", color: "#71717A" }}>Asset: <strong style={{ color: "#fff" }}>XLM</strong></span>
               </div>
 
               {/* Side Selector Tabs */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", padding: "4px", background: "rgba(0,0,0,0.4)", borderRadius: "8px", marginBottom: "20px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", padding: "3px", background: "rgba(9, 9, 11, 0.5)", borderRadius: "6px", border: "1px solid #27272A", marginBottom: "16px" }}>
                 <button
                   onClick={() => setSelectedSide("YES")}
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    background: selectedSide === "YES" ? "#00FF88" : "transparent",
-                    color: selectedSide === "YES" ? "#000" : "#fff",
-                    fontWeight: 800,
-                    fontSize: "13px",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    background: selectedSide === "YES" ? "#10B981" : "transparent",
+                    color: selectedSide === "YES" ? "#000" : "#71717A",
+                    fontWeight: 700,
+                    fontSize: "12px",
                     border: "none",
                     cursor: "pointer",
                     transition: "all 0.2s"
@@ -895,12 +888,12 @@ function PredictionsTerminal() {
                 <button
                   onClick={() => setSelectedSide("NO")}
                   style={{
-                    padding: "10px",
-                    borderRadius: "6px",
-                    background: selectedSide === "NO" ? "#FF3366" : "transparent",
-                    color: selectedSide === "NO" ? "#fff" : "#fff",
-                    fontWeight: 800,
-                    fontSize: "13px",
+                    padding: "8px",
+                    borderRadius: "4px",
+                    background: selectedSide === "NO" ? "#EF4444" : "transparent",
+                    color: selectedSide === "NO" ? "#fff" : "#71717A",
+                    fontWeight: 700,
+                    fontSize: "12px",
                     border: "none",
                     cursor: "pointer",
                     transition: "all 0.2s"
@@ -911,9 +904,9 @@ function PredictionsTerminal() {
               </div>
 
               {/* Amount Input in XLM */}
-              <div style={{ marginBottom: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#A1A1AA", marginBottom: "8px" }}>
-                  <span>Stake Amount (Costs XLM)</span>
+              <div style={{ marginBottom: "14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#71717A", marginBottom: "6px" }}>
+                  <span>Stake Amount</span>
                   <span>Wallet: <strong style={{ color: "#fff" }}>{xlmBalance} XLM</strong></span>
                 </div>
                 <div style={{ position: "relative" }}>
@@ -924,36 +917,36 @@ function PredictionsTerminal() {
                     placeholder="0.00"
                     style={{
                       width: "100%",
-                      padding: "16px",
-                      borderRadius: "10px",
-                      background: "rgba(0,0,0,0.5)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      padding: "12px 14px",
+                      borderRadius: "8px",
+                      background: "rgba(9, 9, 11, 0.5)",
+                      border: "1px solid #3F3F46",
                       color: "#fff",
-                      fontSize: "20px",
-                      fontWeight: 700,
+                      fontSize: "16px",
+                      fontWeight: 600,
                       outline: "none"
                     }}
                   />
-                  <span style={{ position: "absolute", right: "16px", top: "18px", color: "#00E5FF", fontWeight: 800, fontSize: "14px" }}>
+                  <span style={{ position: "absolute", right: "12px", top: "14px", color: "#3B82F6", fontWeight: 700, fontSize: "12px" }}>
                     XLM
                   </span>
                 </div>
               </div>
 
               {/* Quick XLM Multipliers */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginBottom: "24px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "6px", marginBottom: "16px" }}>
                 {["50", "100", "500", "1000"].map((preset) => (
                   <button
                     key={preset}
                     onClick={() => setBetAmountXLM(preset)}
                     style={{
-                      padding: "8px",
+                      padding: "6px",
                       borderRadius: "6px",
-                      background: betAmountXLM === preset ? "rgba(0, 229, 255, 0.2)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${betAmountXLM === preset ? "#00E5FF" : "rgba(255,255,255,0.08)"}`,
-                      color: betAmountXLM === preset ? "#00E5FF" : "#A1A1AA",
-                      fontSize: "12px",
-                      fontWeight: 600,
+                      background: betAmountXLM === preset ? "rgba(59, 130, 246, 0.15)" : "rgba(9, 9, 11, 0.5)",
+                      border: `1px solid ${betAmountXLM === preset ? "#3B82F6" : "#27272A"}`,
+                      color: betAmountXLM === preset ? "#3B82F6" : "#71717A",
+                      fontSize: "11px",
+                      fontWeight: 500,
                       cursor: "pointer"
                     }}
                   >
@@ -963,22 +956,22 @@ function PredictionsTerminal() {
               </div>
 
               {/* Trade Breakdown Summary */}
-              <div style={{ background: "rgba(0,0,0,0.3)", borderRadius: "10px", padding: "16px", marginBottom: "24px", display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#A1A1AA" }}>
+              <div style={{ background: "rgba(9, 9, 11, 0.5)", border: "1px solid #27272A", borderRadius: "8px", padding: "12px", marginBottom: "16px", display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", color: "#71717A" }}>
                   <span>Price per Share:</span>
-                  <span style={{ color: "#fff", fontWeight: 600 }}>{sharePrice.toFixed(2)} XLM</span>
+                  <span style={{ color: "#fff", fontWeight: 500 }}>{sharePrice.toFixed(2)} XLM</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#A1A1AA" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", color: "#71717A" }}>
                   <span>Outcome Shares:</span>
-                  <span style={{ color: "#fff", fontWeight: 700 }}>{sharesEstimated} {selectedSide}</span>
+                  <span style={{ color: "#fff", fontWeight: 600 }}>{sharesEstimated} {selectedSide}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", color: "#A1A1AA" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", color: "#71717A" }}>
                   <span>Potential Return:</span>
-                  <span style={{ color: selectedSide === "YES" ? "#00FF88" : "#FF3366", fontWeight: 700 }}>+{potentialReturn}%</span>
+                  <span style={{ color: selectedSide === "YES" ? "#10B981" : "#EF4444", fontWeight: 600 }}>+{potentialReturn}%</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "8px", color: "#A1A1AA" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "6px", color: "#71717A" }}>
                   <span>Total Payout (if correct):</span>
-                  <span style={{ color: "#00FF88", fontWeight: 800, fontSize: "15px" }}>{sharesEstimated} XLM</span>
+                  <span style={{ color: "#10B981", fontWeight: 700, fontSize: "13px" }}>{sharesEstimated} XLM</span>
                 </div>
               </div>
 
@@ -988,22 +981,21 @@ function PredictionsTerminal() {
                   onClick={openSidebar}
                   style={{
                     width: "100%",
-                    padding: "16px",
-                    borderRadius: "10px",
-                    background: "linear-gradient(135deg, #FF3366, #B534FF)",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: "#EF4444",
                     color: "#fff",
-                    fontWeight: 800,
-                    fontSize: "15px",
+                    fontWeight: 600,
+                    fontSize: "13px",
                     border: "none",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "8px",
-                    boxShadow: "0 0 25px rgba(255, 51, 102, 0.4)"
+                    gap: "6px"
                   }}
                 >
-                  <Lock size={16} />
+                  <Lock size={14} />
                   Connect Wallet to Vote ({numAmount} XLM)
                 </button>
               ) : (
@@ -1012,20 +1004,15 @@ function PredictionsTerminal() {
                   disabled={isSubmitting}
                   style={{
                     width: "100%",
-                    padding: "16px",
-                    borderRadius: "10px",
-                    background: selectedSide === "YES"
-                      ? "linear-gradient(135deg, #00FF88, #00E5FF)"
-                      : "linear-gradient(135deg, #FF3366, #B534FF)",
-                    color: "#000",
-                    fontWeight: 800,
-                    fontSize: "16px",
+                    padding: "12px",
+                    borderRadius: "8px",
+                    background: selectedSide === "YES" ? "#10B981" : "#EF4444",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "13px",
                     border: "none",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
                     opacity: isSubmitting ? 0.6 : 1,
-                    boxShadow: selectedSide === "YES"
-                      ? "0 0 25px rgba(0, 255, 136, 0.3)"
-                      : "0 0 25px rgba(255, 51, 102, 0.3)",
                     transition: "all 0.2s"
                   }}
                 >
@@ -1034,19 +1021,19 @@ function PredictionsTerminal() {
               )}
 
               {/* Live Recent Bets Tape */}
-              <div style={{ marginTop: "24px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", fontWeight: 700, color: "#71717A", textTransform: "uppercase", marginBottom: "10px" }}>
+              <div style={{ marginTop: "16px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", fontWeight: 700, color: "#52525B", textTransform: "uppercase", marginBottom: "8px" }}>
                   <span>Recent On-Chain Votes</span>
-                  <Activity size={12} color="#00E5FF" />
+                  <Activity size={11} color="#3B82F6" />
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {recentBets.map((b, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", background: "rgba(255,255,255,0.02)", padding: "6px 10px", borderRadius: "6px" }}>
-                      <span style={{ fontFamily: "monospace", color: "#A1A1AA" }}>{b.wallet}</span>
-                      <span style={{ fontWeight: 700, color: b.side === "YES" ? "#00FF88" : "#FF3366" }}>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", background: "rgba(9, 9, 11, 0.5)", padding: "6px 8px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.02)" }}>
+                      <span style={{ fontFamily: "var(--font-geist-mono)", color: "#71717A" }}>{b.wallet}</span>
+                      <span style={{ fontWeight: 600, color: b.side === "YES" ? "#10B981" : "#EF4444" }}>
                         {b.side} {b.amount} XLM
                       </span>
-                      <span style={{ color: "#52525B", fontSize: "11px" }}>{b.time}</span>
+                      <span style={{ color: "#52525B", fontSize: "10px" }}>{b.time}</span>
                     </div>
                   ))}
                 </div>
@@ -1060,27 +1047,27 @@ function PredictionsTerminal() {
 
       {/* ── Create Contest Modal ── */}
       {isCreateModalOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "24px" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "560px", padding: "32px", position: "relative", border: "1px solid rgba(0, 229, 255, 0.3)", boxShadow: "0 0 50px rgba(0, 229, 255, 0.2)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "20px" }}>
+          <div style={{ ...dashboardCardStyle, width: "100%", maxWidth: "520px", padding: "24px", position: "relative", border: "1px solid #3F3F46" }}>
             
             <button
               onClick={() => setIsCreateModalOpen(false)}
-              style={{ position: "absolute", top: "20px", right: "20px", background: "transparent", border: "none", color: "#A1A1AA", cursor: "pointer" }}
+              style={{ position: "absolute", top: "16px", right: "16px", background: "transparent", border: "none", color: "#71717A", cursor: "pointer" }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <PlusCircle size={22} color="#00E5FF" />
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 800, margin: 0 }}>Create Prediction Contest</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+              <PlusCircle size={18} color="#3B82F6" />
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0, color: "#fff" }}>Create Prediction Contest</h2>
             </div>
-            <p style={{ color: "#A1A1AA", fontSize: "13px", marginBottom: "24px" }}>
+            <p style={{ color: "#71717A", fontSize: "12px", marginBottom: "16px" }}>
               Deploy a new binary outcome prediction contest onto the Soroban smart contract.
             </p>
 
-            <form onSubmit={handleCreateMarket} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <form onSubmit={handleCreateMarket} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#A1A1AA", marginBottom: "6px" }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#71717A", marginBottom: "4px" }}>
                   Contest Question / Title *
                 </label>
                 <input
@@ -1089,19 +1076,19 @@ function PredictionsTerminal() {
                   placeholder="e.g. Will XLM market cap flip ADA by Q4 2026?"
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
-                  style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none", fontSize: "14px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", background: "rgba(9, 9, 11, 0.5)", border: "1px solid #3F3F46", color: "#fff", outline: "none", fontSize: "13px" }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#A1A1AA", marginBottom: "6px" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#71717A", marginBottom: "4px" }}>
                     Category
                   </label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
-                    style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "#18181B", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none", fontSize: "14px" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "6px", background: "#18181B", border: "1px solid #3F3F46", color: "#fff", outline: "none", fontSize: "13px" }}
                   >
                     <option value="Stellar & Soroban">Stellar & Soroban</option>
                     <option value="Crypto & DeFi">Crypto & DeFi</option>
@@ -1111,7 +1098,7 @@ function PredictionsTerminal() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#A1A1AA", marginBottom: "6px" }}>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#71717A", marginBottom: "4px" }}>
                     Resolution Date
                   </label>
                   <input
@@ -1119,13 +1106,13 @@ function PredictionsTerminal() {
                     required
                     value={newEndDate}
                     onChange={(e) => setNewEndDate(e.target.value)}
-                    style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "#18181B", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none", fontSize: "14px" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "6px", background: "#18181B", border: "1px solid #3F3F46", color: "#fff", outline: "none", fontSize: "13px" }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#A1A1AA", marginBottom: "6px" }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#71717A", marginBottom: "4px" }}>
                   Initial Liquidity Staked (XLM)
                 </label>
                 <input
@@ -1133,28 +1120,28 @@ function PredictionsTerminal() {
                   min="50"
                   value={newInitialPoolXLM}
                   onChange={(e) => setNewInitialPoolXLM(e.target.value)}
-                  style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none", fontSize: "14px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", background: "rgba(9, 9, 11, 0.5)", border: "1px solid #3F3F46", color: "#fff", outline: "none", fontSize: "13px" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#A1A1AA", marginBottom: "6px" }}>
+                <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#71717A", marginBottom: "4px" }}>
                   Resolution Oracle & Details
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder="Specify resolution criteria (e.g. CoinGecko price, official announcement)..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  style={{ width: "100%", padding: "12px", borderRadius: "8px", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none", fontSize: "14px", resize: "none" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "6px", background: "rgba(9, 9, 11, 0.5)", border: "1px solid #3F3F46", color: "#fff", outline: "none", fontSize: "13px", resize: "none" }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+              <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  style={{ flex: 1, padding: "14px", borderRadius: "8px", background: "rgba(255,255,255,0.05)", color: "#fff", border: "none", fontWeight: 600, cursor: "pointer" }}
+                  style={{ flex: 1, padding: "10px", borderRadius: "6px", background: "#27272A", color: "#A1A1AA", border: "none", fontWeight: 500, fontSize: "13px", cursor: "pointer" }}
                 >
                   Cancel
                 </button>
@@ -1163,17 +1150,17 @@ function PredictionsTerminal() {
                   disabled={isCreatingMarket}
                   style={{
                     flex: 2,
-                    padding: "14px",
-                    borderRadius: "8px",
-                    background: "linear-gradient(135deg, #00E5FF, #0077FF)",
-                    color: "#000",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    background: "#3B82F6",
+                    color: "#fff",
                     border: "none",
-                    fontWeight: 800,
-                    cursor: isCreatingMarket ? "not-allowed" : "pointer",
-                    boxShadow: "0 0 25px rgba(0, 229, 255, 0.4)"
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    cursor: isCreatingMarket ? "not-allowed" : "pointer"
                   }}
                 >
-                  {isCreatingMarket ? "Signing & Deploying..." : "Sign & Deploy on Stellar"}
+                  {isCreatingMarket ? "Signing on Stellar..." : "Sign & Deploy on Stellar"}
                 </button>
               </div>
             </form>
