@@ -1,4 +1,4 @@
-name: Production CI/CD Pipeline
+name: Zing Production CI
 
 on:
   push:
@@ -7,16 +7,15 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # ── STAGE 1: Frontend Build & TypeScript Verification ──
   frontend_build:
-    name: 1. Frontend Next.js Build
+    name: Frontend Build
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js 20
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
@@ -25,16 +24,12 @@ jobs:
     - name: Install Frontend Dependencies
       run: npm ci --legacy-peer-deps
       
-    - name: Build Next.js Production App
+    - name: Build Next.js
       run: npm run build
-      
-    - name: Frontend Build Verification
-      run: echo "✅ Stage 1 passed: Frontend compiled with zero errors."
 
-  # ── STAGE 2: Contracts WASM Compilation (Runs after Frontend) ──
   contracts_build:
-    name: 2. Soroban Contracts Build (WASM)
-    needs: [frontend_build]
+    name: Contracts Build
+    needs: frontend_build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,18 +39,16 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
       
-    - name: Setup Rust & WASM32 Target
+    - name: Setup Rust & WASM Target
       uses: dtolnay/rust-toolchain@stable
       with:
         target: wasm32-unknown-unknown
         
-    - name: Compile All 7 Soroban Smart Contracts
+    - name: Build Contracts (WASM)
       run: cargo build --target wasm32-unknown-unknown --release
       
-    - name: Validate Compiled WASM Binaries
-      run: |
-        ls -la target/wasm32-unknown-unknown/release/*.wasm
-        echo "✅ Stage 2 passed: All 7 Soroban contracts successfully compiled to release WASM."
+    - name: Verify WASM Outputs
+      run: ls -la target/wasm32-unknown-unknown/release/*.wasm
         
     - name: Upload Contract Artifacts
       uses: actions/upload-artifact@v4
@@ -64,10 +57,9 @@ jobs:
         path: contracts/target/wasm32-unknown-unknown/release/*.wasm
         retention-days: 7
 
-  # ── STAGE 3: Contracts Lint & Code Quality (Runs after Contracts Build) ──
   contracts_quality:
-    name: 3. Contracts Formatting & Quality
-    needs: [contracts_build]
+    name: Contracts Quality
+    needs: contracts_build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -77,14 +69,10 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
       
-    - name: Setup Rust & Components
+    - name: Setup Rust Toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
-        target: wasm32-unknown-unknown
         components: rustfmt
         
-    - name: Check Rust Code Formatting
+    - name: Check Formatting
       run: cargo fmt -- --check
-      
-    - name: Contracts Quality Verification
-      run: echo "✅ Stage 3 passed: All contracts match strict formatting and quality standards."
