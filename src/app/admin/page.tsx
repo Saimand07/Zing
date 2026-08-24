@@ -73,9 +73,18 @@ export default function AdminPage() {
       const { data: dbUsers } = await supabase.from("user_profiles").select("*").order("created_at", { ascending: false }).limit(50);
       const { data: dbTx } = await supabase.from("user_transactions").select("*").order("created_at", { ascending: false }).limit(100);
 
-      // Use real DB data if available, otherwise fall back to seeds
-      usersData = (dbUsers && dbUsers.length > 0) ? dbUsers : SEED_USERS;
-      txData = (dbTx && dbTx.length > 0) ? dbTx : SEED_TRANSACTIONS;
+      const dbUsersSafe = dbUsers || [];
+      const dbTxSafe = dbTx || [];
+
+      // Combine and deduplicate users by ID
+      const userMap = new Map();
+      [...SEED_USERS, ...dbUsersSafe].forEach(u => userMap.set(u.id, u));
+      usersData = Array.from(userMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      // Combine and deduplicate tx by ID
+      const txMap = new Map();
+      [...SEED_TRANSACTIONS, ...dbTxSafe].forEach(t => txMap.set(t.id, t));
+      txData = Array.from(txMap.values()).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       const volume = txData.reduce((acc, tx) => acc + Number(tx.amount || 0), 0);
       setUsers(usersData);
