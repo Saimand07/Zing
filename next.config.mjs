@@ -1,1 +1,3 @@
-/** @type {import('next').NextConfig} */`nconst nextConfig = {};`n`nexport default nextConfig;
+/** @type {import('next').NextConfig} */
+const nextConfig = {};
+export default nextConfig;
