@@ -98,7 +98,7 @@ export default function AppSidebar() {
         <NavItem href="/analytics" icon={BarChart2} label="Analytics" />
         <NavItem href="/trade" icon={ArrowRightLeft} label="Trade (Spot)" />
         <NavItem href="/trade/predictions" icon={TrendingUp} label="Prediction Markets" badge="HOT" />
-        <NavItem href="/perps" icon={ArrowRightLeft} label="Perps & Futures" disabled />
+        <NavItem href="/perps" icon={ArrowRightLeft} label="Perps & Futures" />
         <NavItem href="/launch" icon={Rocket} label="LaunchZone" />
         {pathname.startsWith("/launch") && (
           <div className="flex flex-col gap-1 ml-7 -mt-0.5 mb-2">
@@ -106,7 +106,7 @@ export default function AppSidebar() {
             <Link href="/launch/create" className={`text-[13px] px-3 py-1.5 rounded-md transition-all ${pathname === "/launch/create" ? "text-white bg-white/5" : "text-zinc-400 hover:text-white hover:bg-white/5"}`}>Launch New Token</Link>
           </div>
         )}
-        <NavItem href="/nft" icon={ImageIcon} label="NFT" disabled />
+        <NavItem href="/nft" icon={ImageIcon} label="NFT" />
         
         <div className="text-[11px] font-bold text-zinc-500 uppercase px-3 pt-6 pb-1 tracking-wider">Community</div>
         <NavItem href="/social-booster" icon={Users} label="Social Booster" />
