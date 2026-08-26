@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { GLSLHills } from "@/components/ui/glsl-hills";
 
-export default function AboutPage() {
+export default function EcosystemPage() {
   return (
     <div style={{ backgroundColor: "#050505", minHeight: "100vh", color: "#fff", overflowX: "hidden", position: "relative" }}>
       
@@ -34,10 +34,10 @@ export default function AboutPage() {
             <span style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
           </Link>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">
-            <Link href="/ecosystem" className="nav-link">Ecosystem</Link>
+            <Link href="/ecosystem" className="nav-link" style={{ color: "#fff" }}>Ecosystem</Link>
             <Link href="/stats" className="nav-link">Live Stats</Link>
             <Link href="/agents" className="nav-link">AI Agents</Link>
-            <Link href="/about" className="nav-link" style={{ color: "#fff" }}>About</Link>
+            <Link href="/about" className="nav-link">About</Link>
           </div>
         </div>
 
@@ -51,7 +51,7 @@ export default function AboutPage() {
         </Link>
       </nav>
 
-      {/* ── About Content ── */}
+      {/* ── Ecosystem Content ── */}
       <section
         style={{
           display: "flex",
@@ -64,7 +64,7 @@ export default function AboutPage() {
           zIndex: 1,
         }}
       >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           <h1
             className="text-gradient"
             style={{
@@ -75,30 +75,34 @@ export default function AboutPage() {
               margin: "0 0 40px 0"
             }}
           >
-            Empowering the Next Generation of DeFi
+            The Zing Ecosystem
           </h1>
           
           <div className="glass-card" style={{ padding: "48px", textAlign: "left", marginBottom: "40px" }}>
-            <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "24px", color: "#fff" }}>Our Mission</h2>
+            <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "24px", color: "#fff" }}>Everything you need.</h2>
             <p style={{ fontSize: "16px", color: "#A1A1AA", lineHeight: 1.8, marginBottom: "24px" }}>
-              ZING was built on the fundamental belief that decentralized finance should be accessible, lightning-fast, and natively secure. By leveraging the Stellar network and Soroban smart contracts, we are eliminating the barriers to entry for both developers creating new assets and traders seeking deep liquidity.
-            </p>
-            <p style={{ fontSize: "16px", color: "#A1A1AA", lineHeight: 1.8 }}>
-              We're not just another DEX. We're a comprehensive Web3 terminal providing one-click token launches, intelligent AI trading agents, cross-chain swaps, and engaging social quests. 
+              Trade, Launch, and Grow with enterprise-grade infrastructure built for the retail trader. Zing combines the speed of Stellar with the smart contract capabilities of Soroban to provide a seamless Web3 experience.
             </p>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", textAlign: "left" }}>
             <div className="glass-card" style={{ padding: "32px" }}>
-              <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "16px", color: "#00E5FF" }}>Speed & Scale</h3>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(0, 119, 255, 0.2))", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px", border: "1px solid rgba(0, 229, 255, 0.3)" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00E5FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon></svg>
+              </div>
+              <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "16px", color: "#fff" }}>Spot & Derivatives</h3>
               <p style={{ fontSize: "15px", color: "#A1A1AA", lineHeight: 1.6 }}>
-                Settlement in 3-5 seconds with near-zero fees. ZING ensures you never miss a market move due to network congestion.
+                Access deep liquidity via the Stellar DEX and our Soroban-powered Prediction Markets. Real-time TradingView charts and native wallet execution.
               </p>
             </div>
+            
             <div className="glass-card" style={{ padding: "32px" }}>
-              <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "16px", color: "#B534FF" }}>Fully Non-Custodial</h3>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255, 51, 102, 0.15)", border: "1px solid rgba(255, 51, 102, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF3366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path></svg>
+              </div>
+              <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "16px", color: "#fff" }}>LaunchZone</h3>
               <p style={{ fontSize: "15px", color: "#A1A1AA", lineHeight: 1.6 }}>
-                You hold your keys, always. Trade directly from your Stellar wallet via Freighter, seamlessly integrated into our terminal.
+                Deploy Stellar assets or Soroban smart tokens instantly with 1-click bonding curve liquidity.
               </p>
             </div>
           </div>

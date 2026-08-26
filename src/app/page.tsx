@@ -59,9 +59,9 @@ export default async function HomePage() {
             <span className="hidden sm:inline" style={{ fontSize: "24px", fontWeight: 800, letterSpacing: "-0.04em", color: "#fff" }}>ZING</span>
           </div>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">
-            <Link href="#ecosystem" className="nav-link">Ecosystem</Link>
-            <Link href="#stats" className="nav-link">Live Stats</Link>
-            <Link href="#agents" className="nav-link">AI Agents</Link>
+            <Link href="/ecosystem" className="nav-link">Ecosystem</Link>
+            <Link href="/stats" className="nav-link">Live Stats</Link>
+            <Link href="/agents" className="nav-link">AI Agents</Link>
             <Link href="/about" className="nav-link">About</Link>
           </div>
         </div>

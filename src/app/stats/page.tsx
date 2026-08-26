@@ -1,7 +1,32 @@
 import Link from "next/link";
+import { fetchOrderBook, getMidPrice } from "@/lib/stellar";
+import { supabase } from "@/lib/supabase";
 import { GLSLHills } from "@/components/ui/glsl-hills";
 
-export default function AboutPage() {
+async function getLiveData() {
+  let midPrice: string | null = null;
+  try {
+    const ob = await fetchOrderBook(5);
+    midPrice = getMidPrice(ob);
+  } catch { /* ignore */ }
+
+  const [projectsRes, campaignsRes, competitionsRes] = await Promise.all([
+    supabase.from("projects").select("id", { count: "exact", head: true }),
+    supabase.from("campaigns").select("id", { count: "exact", head: true }),
+    supabase.from("competitions").select("id", { count: "exact", head: true }),
+  ]);
+
+  return {
+    midPrice,
+    projectCount: projectsRes.count ?? 0,
+    campaignCount: campaignsRes.count ?? 0,
+    competitionCount: competitionsRes.count ?? 0,
+  };
+}
+
+export default async function StatsPage() {
+  const { midPrice, projectCount, campaignCount, competitionCount } = await getLiveData();
+
   return (
     <div style={{ backgroundColor: "#050505", minHeight: "100vh", color: "#fff", overflowX: "hidden", position: "relative" }}>
       
@@ -35,9 +60,9 @@ export default function AboutPage() {
           </Link>
           <div style={{ gap: "32px" }} className="hidden md:flex items-center">
             <Link href="/ecosystem" className="nav-link">Ecosystem</Link>
-            <Link href="/stats" className="nav-link">Live Stats</Link>
+            <Link href="/stats" className="nav-link" style={{ color: "#fff" }}>Live Stats</Link>
             <Link href="/agents" className="nav-link">AI Agents</Link>
-            <Link href="/about" className="nav-link" style={{ color: "#fff" }}>About</Link>
+            <Link href="/about" className="nav-link">About</Link>
           </div>
         </div>
 
@@ -51,7 +76,7 @@ export default function AboutPage() {
         </Link>
       </nav>
 
-      {/* ── About Content ── */}
+      {/* ── Stats Content ── */}
       <section
         style={{
           display: "flex",
@@ -64,7 +89,7 @@ export default function AboutPage() {
           zIndex: 1,
         }}
       >
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", width: "100%" }}>
           <h1
             className="text-gradient"
             style={{
@@ -75,32 +100,23 @@ export default function AboutPage() {
               margin: "0 0 40px 0"
             }}
           >
-            Empowering the Next Generation of DeFi
+            Live Zing Stats
           </h1>
           
-          <div className="glass-card" style={{ padding: "48px", textAlign: "left", marginBottom: "40px" }}>
-            <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "24px", color: "#fff" }}>Our Mission</h2>
-            <p style={{ fontSize: "16px", color: "#A1A1AA", lineHeight: 1.8, marginBottom: "24px" }}>
-              ZING was built on the fundamental belief that decentralized finance should be accessible, lightning-fast, and natively secure. By leveraging the Stellar network and Soroban smart contracts, we are eliminating the barriers to entry for both developers creating new assets and traders seeking deep liquidity.
-            </p>
-            <p style={{ fontSize: "16px", color: "#A1A1AA", lineHeight: 1.8 }}>
-              We're not just another DEX. We're a comprehensive Web3 terminal providing one-click token launches, intelligent AI trading agents, cross-chain swaps, and engaging social quests. 
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", textAlign: "left" }}>
-            <div className="glass-card" style={{ padding: "32px" }}>
-              <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "16px", color: "#00E5FF" }}>Speed & Scale</h3>
-              <p style={{ fontSize: "15px", color: "#A1A1AA", lineHeight: 1.6 }}>
-                Settlement in 3-5 seconds with near-zero fees. ZING ensures you never miss a market move due to network congestion.
-              </p>
-            </div>
-            <div className="glass-card" style={{ padding: "32px" }}>
-              <h3 style={{ fontSize: "20px", fontWeight: 700, marginBottom: "16px", color: "#B534FF" }}>Fully Non-Custodial</h3>
-              <p style={{ fontSize: "15px", color: "#A1A1AA", lineHeight: 1.6 }}>
-                You hold your keys, always. Trade directly from your Stellar wallet via Freighter, seamlessly integrated into our terminal.
-              </p>
-            </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", textAlign: "left", marginTop: "60px" }}>
+            {[
+              { label: "Live XLM/USDC Price", value: midPrice ? `$${parseFloat(midPrice).toFixed(4)}` : "—", highlight: "#00E5FF", desc: "Current midpoint price on Stellar DEX" },
+              { label: "Active Projects", value: projectCount.toString(), highlight: "#B534FF", desc: "Total token launches on LaunchZone" },
+              { label: "Live Campaigns", value: campaignCount.toString(), highlight: "#FF3366", desc: "Active community boost campaigns" },
+              { label: "Competitions", value: competitionCount.toString(), highlight: "#00FF88", desc: "Ongoing trading and social competitions" },
+            ].map((stat, i) => (
+              <div key={i} className="glass-card" style={{ padding: "40px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, right: 0, width: "150px", height: "150px", background: `radial-gradient(circle, ${stat.highlight}30 0%, rgba(0,0,0,0) 70%)`, filter: "blur(20px)" }} />
+                <div style={{ fontSize: "3.5rem", fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", marginBottom: "8px", textShadow: "0 4px 20px rgba(0,0,0,0.5)" }}>{stat.value}</div>
+                <div style={{ fontSize: "14px", fontWeight: 600, color: "#A1A1AA", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "16px" }}>{stat.label}</div>
+                <div style={{ fontSize: "13px", color: "#71717A", lineHeight: 1.5 }}>{stat.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
