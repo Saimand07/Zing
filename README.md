@@ -71,7 +71,7 @@ Zing is a full-stack, non-custodial decentralized exchange, token launchpad, pre
 Zing/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                      # Master 3-Stage Ordered CI/CD Pipeline
+│       └── ci.yml                      # CI/CD Pipeline (Build, Test, Lint, Deploy)
 │
 ├── src/
 │   ├── app/                            # Next.js App Router (Pages & API Routes)
@@ -82,6 +82,12 @@ Zing/
 │   │   │   └── predictions/            # On-Chain Prediction Markets & Live Charts
 │   │   ├── launch/                     # Token & Agent LaunchZone
 │   │   │   └── create/                 # No-Code Token Issuance Wizard
+│   │   ├── ecosystem/                  # Ecosystem Projects & Integrations Showcase
+│   │   ├── stats/                      # Live Network & Orderbook Analytics
+│   │   ├── agents/                     # AI Agent Intent & Solver Discovery
+│   │   ├── wallet/                     # Multi-Asset Stellar Wallet Hub
+│   │   ├── perps/                      # Soroban Perpetual Futures Terminal
+│   │   ├── nft/                        # Stellar NFT & Collectibles Hub
 │   │   ├── analytics/                  # Public Platform Analytics Dashboard
 │   │   ├── admin/                      # Admin Console (Role-Based Access Control)
 │   │   ├── social-booster/             # Social Quest Campaigns
@@ -111,21 +117,16 @@ Zing/
 │       └── supabase.ts                 # Supabase database client proxy
 │
 ├── contracts/                          # Soroban Rust Contracts Workspace
-│   ├── prediction_market/              # Binary outcome prediction contract
-│   │   └── src/lib.rs                  # #[contracterror] enum error handling
-│   ├── intent_swap/                    # Zero-gas intent-based atomic swap
-│   │   └── src/lib.rs                  # Solver routing & MEV resistance
-│   ├── launchpad/                      # Token Launchpad & Factory
-│   │   └── src/lib.rs                  # No-code asset issuance & liquidity bootstrap
-│   ├── smart_wallet/                   # Account abstraction smart wallet
-│   │   └── src/lib.rs                  # Session keys & multi-asset routing
-│   ├── campaign/                       # Social Booster campaigns
-│   │   └── src/lib.rs                  # Quest validation & reward distribution
-│   ├── competition/                    # Trading competitions
-│   │   └── src/lib.rs                  # DEX volume tracking & prize distribution
-│   └── token/                          # Soroban Token standard implementation
-│       └── src/lib.rs                  # SEP-41 compliant token contract
+│   ├── prediction_market/              # Binary outcome prediction contract & unit tests
+│   ├── intent_swap/                    # Zero-gas intent-based atomic swap & unit tests
+│   ├── launchpad/                      # Token Launchpad & Factory & unit tests
+│   ├── smart_wallet/                   # Account abstraction smart wallet & unit tests
+│   ├── campaign/                       # Social Booster campaigns & unit tests
+│   ├── competition/                    # Trading competitions & unit tests
+│   ├── token/                          # Soroban Token standard implementation & unit tests
+│   └── vendor/                         # Local patch dependencies (ethnum, derive_arbitrary)
 │
+├── deploy_launchpad.js                 # Automated Soroban Contract Deployment Script
 ├── supabase/
 │   └── migrations/                     # PostgreSQL Schema Migrations
 │       ├── 20260717000000_init.sql
@@ -244,13 +245,13 @@ All contracts are written in Rust, compiled to `wasm32-unknown-unknown`, and dep
 
 ### CI/CD Pipeline
 ![CI/CD Pipeline](public/Screenshot/CI%20CD%20Pipeline.png)
-> GitHub Actions 3-stage sequential pipeline: Frontend Build → Contracts Build → Contracts Quality.
+> GitHub Actions CI/CD pipeline: Frontend Build & Vercel Deploy, Contracts Validation (Format, Clippy, Tests, WASM Build) & Stellar Testnet Deploy.
 
 ---
 
 ### CI/CD Status
 ![CICD](public/Screenshot/CICD.png)
-> All three CI checks ticked green on a passing main branch commit.
+> All build, test, lint, and deployment CI checks passing on the main branch.
 
 ---
 
