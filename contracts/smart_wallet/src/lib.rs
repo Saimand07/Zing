@@ -46,3 +46,5 @@ impl SmartWallet {
         env.storage().instance().set(&DataKey::Owner, &new_owner);
     }
 }
+
+mod test;

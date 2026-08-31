@@ -1,4 +1,4 @@
-name: Zing Production CI
+name: Zing CI/CD
 
 on:
   push:
@@ -10,20 +10,20 @@ jobs:
   frontend_build:
     name: Frontend Build
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-        
+
     - name: Install Frontend Dependencies
       run: npm ci --legacy-peer-deps
-      
+
     - name: Build Next.js
       run: npm run build
 
@@ -33,37 +33,34 @@ jobs:
     defaults:
       run:
         working-directory: contracts
-        
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-      
-    - name: Setup Rust & WASM Target
-      uses: dtolnay/rust-toolchain@stable
+
+    # soroban-sdk v20 + stellar-xdr 20.1.0 require Rust ≤ 1.79 for `cargo test`
+    # (arbitrary 1.3.2 try_size_hint API breaks on 1.80+)
+    - name: Setup Rust 1.79 + WASM Target
+      uses: dtolnay/rust-toolchain@1.79
       with:
-        target: wasm32-unknown-unknown
+        targets: wasm32-unknown-unknown
         components: rustfmt, clippy
-        
+
     - name: Rust Format Check
       run: cargo fmt --check
-      
+
     - name: Rust Clippy
       run: cargo clippy -- -D warnings -A unexpected_cfgs
-      
-    - name: Validate Contract Logic (no testutils)
-      # `cargo test` and `cargo check --tests` both activate soroban testutils,
-      # which pulls in stellar-xdr 20.1.0 — that crate's `arbitrary` derive
-      # calls `try_size_hint` which doesn't exist in arbitrary ≥1.4.
-      # The WASM release build below fully validates all contract logic.
-      # Integration tests are run separately via `soroban-cli contract invoke`.
-      run: cargo check --no-default-features
-      
+
+    - name: Run Contract Tests
+      run: cargo test
+
     - name: Build Contracts (WASM)
       run: cargo build --target wasm32-unknown-unknown --release
-      
+
     - name: Verify WASM Outputs
       run: ls -la target/wasm32-unknown-unknown/release/*.wasm
-        
+
     - name: Upload Contract Artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -72,7 +69,7 @@ jobs:
         retention-days: 7
 
   frontend_deploy:
-    name: Frontend Deploy
+    name: Frontend Deploy (Vercel)
     needs: frontend_build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -85,13 +82,13 @@ jobs:
           node-version: '20'
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} || echo "Skipping vercel pull, token may be missing"
-      - name: Deploy Project to Vercel
-        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes || echo "Skipping vercel deploy, token may be missing"
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} || echo "VERCEL_TOKEN not set — skipping deploy"
+      - name: Deploy to Vercel Production
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes || echo "VERCEL_TOKEN not set — skipping deploy"
 
   contracts_deploy:
-    name: Contracts Deploy
+    name: Contracts Deploy (Stellar Testnet)
     needs: contracts_build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -107,7 +104,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Dependencies for Deploy Script
+      - name: Install Stellar SDK
         run: npm install @stellar/stellar-sdk
-      - name: Deploy Contracts
+      - name: Deploy Contracts to Stellar Testnet
         run: node deploy_launchpad.js

@@ -108,3 +108,5 @@ impl LaunchpadContract {
         env.storage().persistent().get(&symbol)
     }
 }
+
+mod test;

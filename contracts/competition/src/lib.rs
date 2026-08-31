@@ -50,3 +50,5 @@ impl CompetitionContract {
         env.storage().persistent().get(&DataKey::Score(user))
     }
 }
+
+mod test;

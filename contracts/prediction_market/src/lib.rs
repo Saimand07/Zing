@@ -150,3 +150,5 @@ impl PredictionMarket {
         Ok(())
     }
 }
+
+mod test;

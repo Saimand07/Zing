@@ -48,3 +48,5 @@ impl CampaignContract {
             .publish((Symbol::new(&env, "reward_paid"), user), amount);
     }
 }
+
+mod test;

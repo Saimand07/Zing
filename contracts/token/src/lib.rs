@@ -81,3 +81,5 @@ impl TokenContract {
         7
     }
 }
+
+mod test;
