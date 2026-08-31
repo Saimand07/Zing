@@ -34,7 +34,13 @@ pub struct PredictionMarket;
 
 #[contractimpl]
 impl PredictionMarket {
-    pub fn initialize(env: Env, admin: Address, token: Address, question: String, end_time: u64) -> Result<(), Error> {
+    pub fn initialize(
+        env: Env,
+        admin: Address,
+        token: Address,
+        question: String,
+        end_time: u64,
+    ) -> Result<(), Error> {
         if env.storage().instance().has(&DataKey::Admin) {
             return Err(Error::AlreadyInitialized);
         }
@@ -84,7 +90,7 @@ impl PredictionMarket {
             bet += amount;
             env.storage().persistent().set(&key, &bet);
         }
-        
+
         Ok(())
     }
 
@@ -140,7 +146,7 @@ impl PredictionMarket {
             let token_client = token::Client::new(&env, &token_addr);
             token_client.transfer(&env.current_contract_address(), &user, &reward);
         }
-        
+
         Ok(())
     }
 }

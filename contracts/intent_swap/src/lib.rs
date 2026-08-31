@@ -11,6 +11,7 @@ impl IntentSwap {
     /// The `maker` must have pre-signed an authorization for `fill_intent`
     /// containing only the first 4 arguments (`sell_token`, `buy_token`, `sell_amount`, `min_buy_amount`).
     /// This makes the intent solver-agnostic. Any solver can fill it and provide price improvement.
+    #[allow(clippy::too_many_arguments)]
     pub fn fill_intent(
         env: Env,
         maker: Address,
