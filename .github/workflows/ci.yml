@@ -28,8 +28,7 @@ jobs:
       run: npm run build
 
   contracts_build:
-    name: Contracts Build
-    needs: frontend_build
+    name: Contracts Validation & Build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,7 +42,17 @@ jobs:
       uses: dtolnay/rust-toolchain@stable
       with:
         target: wasm32-unknown-unknown
+        components: rustfmt, clippy
         
+    - name: Rust Format Check
+      run: cargo fmt --check
+      
+    - name: Rust Clippy
+      run: cargo clippy -- -D warnings
+      
+    - name: Run Contract Tests
+      run: cargo test
+      
     - name: Build Contracts (WASM)
       run: cargo build --target wasm32-unknown-unknown --release
       
@@ -57,3 +66,43 @@ jobs:
         path: contracts/target/wasm32-unknown-unknown/release/*.wasm
         retention-days: 7
 
+  frontend_deploy:
+    name: Frontend Deploy
+    needs: frontend_build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }} || echo "Skipping vercel pull, token may be missing"
+      - name: Deploy Project to Vercel
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes || echo "Skipping vercel deploy, token may be missing"
+
+  contracts_deploy:
+    name: Contracts Deploy
+    needs: contracts_build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Download Contract Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: soroban-contracts-wasm
+          path: contracts/target/wasm32-unknown-unknown/release/
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Dependencies for Deploy Script
+        run: npm install @stellar/stellar-sdk
+      - name: Deploy Contracts
+        run: node deploy_launchpad.js
