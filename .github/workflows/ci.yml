@@ -38,10 +38,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # Pin to Rust 1.79 — soroban-sdk v20 + stellar-xdr 20.1.0 are incompatible
-    # with the arbitrary crate on Rust 1.80+ when testutils feature is active.
-    - name: Setup Rust 1.79 + WASM Target
-      uses: dtolnay/rust-toolchain@1.79
+    - name: Setup Rust & WASM Target
+      uses: dtolnay/rust-toolchain@stable
       with:
         target: wasm32-unknown-unknown
         components: rustfmt, clippy
@@ -53,11 +51,7 @@ jobs:
       run: cargo clippy -- -D warnings -A unexpected_cfgs
 
     - name: Run Contract Tests
-      # stellar-xdr 20.1.0 testutils have a known arbitrary API incompatibility
-      # that may surface on some CI environments. Tests are present in all 7
-      # contracts. continue-on-error ensures fmt/clippy/build always run.
       run: cargo test
-      continue-on-error: true
 
     - name: Build Contracts (WASM)
       run: cargo build --target wasm32-unknown-unknown --release
