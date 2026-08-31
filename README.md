@@ -59,9 +59,9 @@ Zing is a full-stack, non-custodial decentralized exchange, token launchpad, pre
    - Account abstraction with session keys and multi-asset routing.
    - `require_auth` enforcement on all state-mutating contract calls.
 
-8. **Multi-Stage Production CI/CD Pipeline**
-   - 3-stage sequential GitHub Actions: Frontend Build → Contracts Build → Contracts Quality.
-   - Zero CI failures permitted; strict TypeScript and Rust `cargo fmt` validation on every push.
+8. **End-to-End Production CI/CD Pipeline**
+   - **Continuous Integration**: Strict validation running Next.js build, `cargo fmt --check`, `cargo clippy -- -D warnings`, unit test suite (`cargo test`), and optimized release WASM compilation for all 7 contracts.
+   - **Continuous Deployment**: Automated CD deployment jobs for the Next.js Frontend (Vercel) and Soroban Smart Contracts (Stellar Testnet).
 
 ---
 
@@ -325,18 +325,21 @@ cp .env.example .env.local
 npm run dev
 ```
 
-### Contract Build Commands
+### Contract Build & Test Commands
 
 ```bash
-# Build all contracts
+# Build all contracts (WASM)
 cd contracts
 cargo build --target wasm32-unknown-unknown --release
 
-# Build a specific contract
-cargo build --package prediction_market --target wasm32-unknown-unknown --release
+# Run unit tests across all 7 contracts
+cargo test
+
+# Lint contracts
+cargo clippy -- -D warnings
 
 # Format Rust code
-cargo fmt
+cargo fmt --check
 ```
 
 ---
